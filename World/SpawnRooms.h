@@ -40,11 +40,19 @@ private:
 		float DistanceBetweenFloors_X = 400.f;
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
 		float DistanceBetweenFloors_Y = 400.f;
-	UPROPERTY(EditAnywhere, Category = "Room Settings")
+	UPROPERTY(EditAnywhere, Category = "Room Settings", meta = (ClampMin = "0"))
 		int32 NumberOfDoors = 2;
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
 		FRandomStream RandomDoorSeed;
 
 	void AddWallAndDoor(bool bCanSpawnDoor, FVector RelativeLocation, FRotator RelativeRotation = FRotator(0.f));
+	void SetUpDoor();
+	int32 GetRandomValueForDoor(int32 WallsAmount);
+
+
 	TArray<int32> NumberOfCurrentDoors;
+	int32 AmountOfWalls;
+	TArray<int32> Doors;
+
+
 };

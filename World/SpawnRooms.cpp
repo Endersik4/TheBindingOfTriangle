@@ -36,11 +36,16 @@ void ASpawnRooms::SetUpRoom()
 {
 	FloorInstanceStaticMesh->ClearInstances();
 	WallInstanceStaticMesh->ClearInstances();
+
 	float x = 0.f;
+	AmountOfWalls = 0;
+	
+	SetUpDoor();
+
 	for (int32 i = 0; i != NumberOfFloors_X; i++)
 	{
 		float y = 0.f;
-
+			
 		// Wall on the left
 		AddWallAndDoor(i % 2 == 1, FVector(x, 0.f, 0.f));
 
@@ -71,14 +76,45 @@ void ASpawnRooms::SetUpRoom()
 
 void ASpawnRooms::AddWallAndDoor(bool bCanSpawnDoor, FVector RelativeLocation, FRotator RelativeRotation)
 {
-	float Weight = float(NumberOfDoors - NumberOfCurrentDoors.Num()) / float(NumberOfDoors);
-	bool bShouldSpawnDoor = UKismetMathLibrary::RandomBoolWithWeightFromStream(Weight, RandomDoorSeed);
-	if (bShouldSpawnDoor == true)
+	AmountOfWalls++;
+
+	if (Doors.Num() > 0)
 	{
-		NumberOfCurrentDoors.Add(1);
-		return;
+		int32 IndexDoor = Doors.Find(AmountOfWalls);
+		if (IndexDoor != INDEX_NONE)
+		{
+			Doors.RemoveAt(IndexDoor);
+			NumberOfCurrentDoors.Add(1);
+			
+			return;
+		}
 	}
 
 	WallInstanceStaticMesh->AddInstance(FTransform(RelativeRotation, RelativeLocation));
+}
+
+void ASpawnRooms::SetUpDoor()
+{
+	Doors.Empty();
+	NumberOfCurrentDoors.Empty();
+
+	int32 NumberOfWalls = 2 * (NumberOfFloors_X + NumberOfFloors_Y);
+	if (NumberOfDoors > NumberOfWalls) NumberOfDoors = NumberOfWalls;
+
+	for (int i = 0; i != NumberOfDoors; i++)
+	{
+		int32 RandVal = GetRandomValueForDoor(NumberOfWalls);
+		Doors.Add(RandVal);
+	}
+}
+
+int32 ASpawnRooms::GetRandomValueForDoor(int32 WallsAmount)
+{
+	int32 RandVal = UKismetMathLibrary::RandomIntegerInRangeFromStream(1, WallsAmount, RandomDoorSeed);
+
+	if (Doors.Find(RandVal - 1) == INDEX_NONE && Doors.Find(RandVal + 1) == INDEX_NONE && Doors.Find(RandVal) == INDEX_NONE) return RandVal;
+	else RandVal = GetRandomValueForDoor(WallsAmount);
+
+	return RandVal;
 }
 
