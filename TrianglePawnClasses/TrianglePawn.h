@@ -30,17 +30,24 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UCapsuleComponent* TriangleCapsuleComp;
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
-		class UCameraComponent* TriangleCamera;
-	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UStaticMeshComponent* TriangleMeshComp;
+	UPROPERTY(EditAnywhere, Category = "Components")
+		class ACameraActor* TriangleCamera;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Movement Settings")
 		float MovementForce = 3000.f;
 	UPROPERTY(EditDefaultsOnly, Category = "Movement Settings")
 		float CounterMovementForce = 3000.f;
 
+	// Movement
 	void MoveForward(float Axis);
 	void MoveRight(float Axis);
+	FVector CounterMovement();
+
+	void Shoot_Right(float Axis);
+	void Shoot_Forward(float Axis);
+
+
 	FRotator* CurrentRotation;
 
 };
