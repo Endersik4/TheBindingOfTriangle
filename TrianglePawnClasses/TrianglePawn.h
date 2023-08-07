@@ -6,6 +6,60 @@
 #include "GameFramework/Pawn.h"
 #include "TrianglePawn.generated.h"
 
+USTRUCT(BlueprintType)
+struct FBulletStruct {
+
+	GENERATED_USTRUCT_BODY();
+
+	// After Distance bullet will be destroyed
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
+		float Distance = 300.f;
+	// How fast bullet will go 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
+		float Speed = 300.f;
+	// How many bullets will be spawned that is facing the same directions
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
+		float Frequency = 300.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
+		float Damage = 300.f;
+	// Should use Way Curve when spawned
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
+		bool bUseWayCurve = false;
+	// Curve for relative additional movement to the bullet, for example: instead of going straight line bullet can waving 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings", meta = (EditCondition = "bUseWayCurve", EditConditionHides))
+		UCurveFloat* WayCurve = nullptr;
+	// Should Bullet back once the distance is reached and after this reach the distance again 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
+		bool bShouldBack = false;
+	// How many bullets can be spawned at the same time
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once")
+		int32 Amount = 1;
+	// Angle between bullets when there is more then 1 bullet
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once", meta = (ClampMin = "0.0", ClampMax = "360.0", UIMin = "9.0", UIMax = "360.0"))
+		float DegreeBetween = 45.f;
+	// Radius of Circe that bullets will be spawned on the edges
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once")
+		float CirceRadius = 30.f;
+	// How much rotate circe around player 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once")
+		float CirceAngle = 0.f;
+
+	FBulletStruct()
+	{
+		Distance = 0.f;
+		Speed = 0.f;
+		Frequency = 0.f;
+		Damage = 0.f;
+		bUseWayCurve = false;
+		WayCurve = nullptr;
+		bShouldBack = false;
+		Amount = 1;
+		DegreeBetween = 45.f;
+		CirceRadius = 0.f;
+		CirceAngle = 0.f;
+	}
+};
+
 UCLASS()
 class THEBINDINGOFTRIANGLE_API ATrianglePawn : public APawn
 {
@@ -26,6 +80,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(BlueprintCallable)
+		void SpawnDebugBullet();
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UCapsuleComponent* TriangleCapsuleComp;
@@ -39,6 +96,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Movement Settings")
 		float CounterMovementForce = 3000.f;
 
+	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
+		FBulletStruct Bullet;
+
 	// Movement
 	void MoveForward(float Axis);
 	void MoveRight(float Axis);
@@ -46,7 +106,6 @@ private:
 
 	void Shoot_Right(float Axis);
 	void Shoot_Forward(float Axis);
-
 
 	FRotator* CurrentRotation;
 
