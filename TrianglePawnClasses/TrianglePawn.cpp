@@ -7,6 +7,11 @@
 #include "Camera/CameraActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "TimerManager.h"
+
+#include "TheBindingOfTriangle/TrianglePawnClasses/Bullet.h"
+
 
 // Sets default values
 ATrianglePawn::ATrianglePawn()
@@ -85,6 +90,13 @@ void ATrianglePawn::Shoot_Right(float Axis)
 	
 	if (Axis > 0.5f)  TriangleMeshComp->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 	else if (Axis < -0.5f)  TriangleMeshComp->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+
+	SpawnDebugBullet();
+	if (bCanSpawnAnotherBullet == true)
+	{
+		bCanSpawnAnotherBullet = false;
+		GetWorldTimerManager().SetTimer(SpawnAnotherBulletHandle, this, &ATrianglePawn::SetCanSpawnAnotherBullet, Bullet.FrequencyTime, false);
+	}
 }
 
 void ATrianglePawn::Shoot_Forward(float Axis)
@@ -93,21 +105,38 @@ void ATrianglePawn::Shoot_Forward(float Axis)
 
 	if (Axis > 0.5f) TriangleMeshComp->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
 	else if (Axis < -0.5f) TriangleMeshComp->SetRelativeRotation(FRotator(0.f, -180.f, 0.f));
+
+	SpawnDebugBullet();
+	if (bCanSpawnAnotherBullet == true)
+	{
+		bCanSpawnAnotherBullet = false;
+		GetWorldTimerManager().SetTimer(SpawnAnotherBulletHandle, this, &ATrianglePawn::SetCanSpawnAnotherBullet, Bullet.FrequencyTime, false);
+	}
 }
 
 void ATrianglePawn::SpawnDebugBullet()
 {
-	UE_LOG(LogTemp, Warning, TEXT("DZIALA"));
-	UKismetSystemLibrary::DrawDebugCircle(GetWorld(), GetActorLocation(), Bullet.CirceRadius, 12, FLinearColor::White, 0.f, 1.f);
-	float angReg = Bullet.DegreeBetween;
-	FMath::DegreesToRadians(angReg);
-	FVector v = FVector(FMath::Cos(angReg), FMath::Sin(angReg), GetActorLocation().Z);
-	UKismetSystemLibrary::DrawDebugArrow(GetWorld(), GetActorLocation(), v, 2.f, FLinearColor::Red, 0.f, 2.f);
-	//FVector2D StartingVector = FVector2D(GetActorLocation() + GetActorForwardVector() * Bullet.CirceRadius);
+	if (bCanSpawnAnotherBullet == false) return;
+	if (bShouldDrawDebugBullets == true) UKismetSystemLibrary::DrawDebugCircle(GetWorld(), GetActorLocation(), Bullet.CirceRadius, 34, FLinearColor::White, 999.f, 1.f, FVector(0.f, 1.f, 0.f), FVector(1.0f, 0.f, 0.f));
 
-	/*for (int i = 0; i != Bullet.Amount; i++)
+	for (int i = 0; i != Bullet.Amount; i++)
 	{
-		UKismetSystemLibrary::DrawDebugArrow(GetWorld(), GetActorLocation(), StartingVector )
-	}*/
+		float angReg = FMath::DegreesToRadians(Bullet.DegreeBetween * i + Bullet.CirceAngle + TriangleMeshComp->GetRelativeRotation().Yaw);
+		FVector Line = FVector(FMath::Cos(angReg) * Bullet.CirceRadius, FMath::Sin(angReg) * Bullet.CirceRadius, 0) + GetActorLocation();
+		FVector Trajectory = FVector(FMath::Cos(angReg), FMath::Sin(angReg), 0);
+		
+		if (bShouldDrawDebugBullets == true)
+		{
+			UKismetSystemLibrary::DrawDebugSphere(GetWorld(), Line, 5.f, 6, FLinearColor::Red, 999.f, 2.f);
+			UKismetSystemLibrary::DrawDebugLine(GetWorld(), Line, Line + Trajectory * 100.f, FLinearColor::Red, 999.f, 1.f);
+		}
+
+		ABullet* BulletActor = GetWorld()->SpawnActor<ABullet>(BulletClass, Line, GetActorRotation());
+		if (BulletActor)
+		{
+			BulletActor->SetTrajectoryBullet(Trajectory);
+			BulletActor->SetBulletData(Bullet);
+		}
+	}
 }
 

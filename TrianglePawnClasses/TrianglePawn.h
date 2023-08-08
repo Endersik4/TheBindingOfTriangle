@@ -17,9 +17,9 @@ struct FBulletStruct {
 	// How fast bullet will go 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		float Speed = 300.f;
-	// How many bullets will be spawned that is facing the same directions
+	// How many bullets will be spawned that is facing the same directions after given time (FrequencyTime)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		float Frequency = 300.f;
+		float FrequencyTime = 0.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		float Damage = 300.f;
 	// Should use Way Curve when spawned
@@ -35,11 +35,11 @@ struct FBulletStruct {
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once")
 		int32 Amount = 1;
 	// Angle between bullets when there is more then 1 bullet
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once", meta = (ClampMin = "0.0", ClampMax = "360.0", UIMin = "9.0", UIMax = "360.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once", meta = (ClampMin = "0.0", ClampMax = "360.0", UIMin = "0.0", UIMax = "360.0"))
 		float DegreeBetween = 45.f;
 	// Radius of Circe that bullets will be spawned on the edges
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once")
-		float CirceRadius = 30.f;
+		float CirceRadius = 100.f;
 	// How much rotate circe around player 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once")
 		float CirceAngle = 0.f;
@@ -47,15 +47,15 @@ struct FBulletStruct {
 	FBulletStruct()
 	{
 		Distance = 0.f;
-		Speed = 0.f;
-		Frequency = 0.f;
+		Speed = 50.f;
+		FrequencyTime = 0.2f;
 		Damage = 0.f;
 		bUseWayCurve = false;
 		WayCurve = nullptr;
 		bShouldBack = false;
 		Amount = 1;
 		DegreeBetween = 45.f;
-		CirceRadius = 0.f;
+		CirceRadius = 100.f;
 		CirceAngle = 0.f;
 	}
 };
@@ -97,6 +97,10 @@ private:
 		float CounterMovementForce = 3000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
+		TSubclassOf<class ABullet> BulletClass;
+	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
+		bool bShouldDrawDebugBullets = false;
+	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
 		FBulletStruct Bullet;
 
 	// Movement
@@ -106,6 +110,11 @@ private:
 
 	void Shoot_Right(float Axis);
 	void Shoot_Forward(float Axis);
+
+	// Frequency Bullet
+	bool bCanSpawnAnotherBullet = true;
+	FTimerHandle SpawnAnotherBulletHandle;
+	void SetCanSpawnAnotherBullet() { bCanSpawnAnotherBullet = true; }
 
 	FRotator* CurrentRotation;
 
