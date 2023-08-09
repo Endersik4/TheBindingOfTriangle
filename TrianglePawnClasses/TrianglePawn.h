@@ -16,10 +16,10 @@ struct FBulletStruct {
 		float Distance = 300.f;
 	// How fast bullet will go 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		float Speed = 300.f;
+		float Speed = 1300.f;
 	// How many bullets will be spawned that is facing the same directions after given time (FrequencyTime)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		float FrequencyTime = 0.5f;
+		float FrequencyTime = 0.3f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		float Damage = 300.f;
 	// Should use Way Curve when spawned
@@ -47,8 +47,8 @@ struct FBulletStruct {
 	FBulletStruct()
 	{
 		Distance = 0.f;
-		Speed = 50.f;
-		FrequencyTime = 0.2f;
+		Speed = 1400.f;
+		FrequencyTime = 0.3f;
 		Damage = 0.f;
 		bUseWayCurve = false;
 		WayCurve = nullptr;
@@ -81,7 +81,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(BlueprintCallable)
-		void SpawnDebugBullet();
+		void DirectionForBullets();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Settings")
+		bool bShouldDrawDebugBullets = false;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
@@ -99,8 +102,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
 		TSubclassOf<class ABullet> BulletClass;
 	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
-		bool bShouldDrawDebugBullets = false;
-	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
 		FBulletStruct Bullet;
 
 	// Movement
@@ -108,14 +109,20 @@ private:
 	void MoveRight(float Axis);
 	FVector CounterMovement();
 
+	// Shoot 
 	void Shoot_Right(float Axis);
 	void Shoot_Forward(float Axis);
+	void Shoot();
+
+	// Bullet
+	void SpawnBullet(FVector StartLocation, FVector DirForBullet);
 
 	// Frequency Bullet
 	bool bCanSpawnAnotherBullet = true;
 	FTimerHandle SpawnAnotherBulletHandle;
 	void SetCanSpawnAnotherBullet() { bCanSpawnAnotherBullet = true; }
 
-	FRotator* CurrentRotation;
+	// Camera
+	void SetTriangleCamera();
 
 };

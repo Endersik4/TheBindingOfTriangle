@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/TimelineComponent.h"
 #include "TheBindingOfTriangle/TrianglePawnClasses/TrianglePawn.h"
 #include "Bullet.generated.h"
 
@@ -27,6 +28,11 @@ public:
 	void SetTrajectoryBullet(FVector NewTrajectory) { TrajectoryBullet = NewTrajectory; }
 	void SetBulletData(FBulletStruct NewData) { BulletData = NewData; }
 
+	// Offset Timeline
+	UFUNCTION()
+		void OffsetTimelineProgress(float Value);
+	void SetOffsetTimeline();
+
 private:
 	UFUNCTION()
 		void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
@@ -34,9 +40,24 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UStaticMeshComponent* BulletMeshComp;
 
-	FVector TrajectoryBullet;
 	FBulletStruct BulletData;
+	FVector BulletScale;
 
+	// Offset Timeline
+	float CurveOffset;
+	FTimeline CurveTimeline;
+	void ShouldUseCurveOffset(FVector& LocAfterOffset);
+
+	// Movement
+	float TrackBulletDistance;
+	float BulletFallingDown = 300.f;
+	FVector TrajectoryBullet;
 	void MovementBullet(float Delta);
+	void SetScaleWhileDroppingDown(float Delta);
 
+	// Bullet Go Back
+	int32 BulletGoBack = 1;
+	bool ShouldBulletGoBack();
+
+	
 };
