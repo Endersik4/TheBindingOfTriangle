@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "TheBindingOfTriangle/Interfaces/TakeDamageInterface.h"
+
 #include "TrianglePawn.generated.h"
 
 USTRUCT(BlueprintType)
@@ -61,7 +63,7 @@ struct FBulletStruct {
 };
 
 UCLASS()
-class THEBINDINGOFTRIANGLE_API ATrianglePawn : public APawn
+class THEBINDINGOFTRIANGLE_API ATrianglePawn : public APawn, public ITakeDamageInterface
 {
 	GENERATED_BODY()
 
@@ -80,6 +82,12 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// Take Damage Interface
+	virtual void TakeDamage(float Damage) override;
+
+	UFUNCTION(BlueprintImplementableEvent)
+		void ChangeColorAfterHit(UMaterialInstanceDynamic* TriangleMaterial);
+
 	UFUNCTION(BlueprintCallable)
 		void DirectionForBullets();
 
@@ -93,6 +101,12 @@ private:
 		class UStaticMeshComponent* TriangleMeshComp;
 	UPROPERTY(EditAnywhere, Category = "Components")
 		class ACameraActor* TriangleCamera;
+
+	// 1 point of Health = Half of Heart
+	UPROPERTY(EditAnywhere, Category = "Player Settings")
+		int32 Health = 5;
+	UPROPERTY(EditAnywhere, Category = "Player Settings|Widgets")
+		TSubclassOf<class UUserWidget> HUDWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Movement Settings")
 		float MovementForce = 3000.f;
@@ -114,6 +128,9 @@ private:
 	void Shoot_Forward(float Axis);
 	void Shoot();
 
+	// Damage
+	UMaterialInstanceDynamic* BaseTriangleDynamicMat;
+
 	// Bullet
 	void SpawnBullet(FVector StartLocation, FVector DirForBullet);
 
@@ -121,6 +138,10 @@ private:
 	bool bCanSpawnAnotherBullet = true;
 	FTimerHandle SpawnAnotherBulletHandle;
 	void SetCanSpawnAnotherBullet() { bCanSpawnAnotherBullet = true; }
+
+	// Widgets
+	class UHUDWidget* HudWidget;
+	void MakeHudWidget();
 
 	// Camera
 	void SetTriangleCamera();

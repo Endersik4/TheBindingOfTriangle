@@ -9,9 +9,10 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "TimerManager.h"
+#include "Blueprint/UserWidget.h"
 
 #include "TheBindingOfTriangle/TrianglePawnClasses/Bullet.h"
-
+#include "TheBindingOfTriangle/Widgets/HUDWidget.h"
 
 // Sets default values
 ATrianglePawn::ATrianglePawn()
@@ -35,6 +36,9 @@ void ATrianglePawn::BeginPlay()
 	Super::BeginPlay();
 	
 	SetTriangleCamera();
+	MakeHudWidget();
+	BaseTriangleDynamicMat = UMaterialInstanceDynamic::Create(TriangleMeshComp->GetMaterial(1), this);
+	TriangleMeshComp->SetMaterial(1, BaseTriangleDynamicMat);
 }
 
 // Called every frame
@@ -117,8 +121,18 @@ void ATrianglePawn::Shoot()
 
 #pragma endregion
 
-#pragma region ////////////////// BULLET ///////////////////
+#pragma region /////////////// TAKE DAMAGE /////////////////
 
+void ATrianglePawn::TakeDamage(float Damage)
+{
+	Health -= FMath::TruncToInt(Damage);
+	
+	ChangeColorAfterHit(BaseTriangleDynamicMat);
+}
+
+#pragma endregion
+
+#pragma region ////////////////// BULLET ///////////////////
 void ATrianglePawn::DirectionForBullets()
 {
 	if (bCanSpawnAnotherBullet == false) return;
@@ -151,6 +165,16 @@ void ATrianglePawn::SpawnBullet(FVector StartLocation, FVector DirForBullet)
 	BulletActor->SetOffsetTimeline();
 }
 #pragma endregion
+
+void ATrianglePawn::MakeHudWidget()
+{
+	APlayerController* TrianglePawnController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (HUDWidgetClass && TrianglePawnController)
+	{
+		HudWidget = Cast<UHUDWidget>(CreateWidget(TrianglePawnController, HUDWidgetClass));
+		HudWidget->AddToViewport();
+	}
+}
 
 void ATrianglePawn::SetTriangleCamera()
 {

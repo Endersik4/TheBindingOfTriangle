@@ -4,6 +4,8 @@
 #include "TheBindingOfTriangle/TrianglePawnClasses/Bullet.h"
 #include "Components/StaticMeshComponent.h"
 
+#include "TheBindingOfTriangle/Interfaces/TakeDamageInterface.h"
+
 // Sets default values
 ABullet::ABullet()
 {
@@ -35,6 +37,11 @@ void ABullet::Tick(float DeltaTime)
 
 void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	ITakeDamageInterface* TakeDamageInter = Cast<ITakeDamageInterface>(Hit.GetActor());
+	if (TakeDamageInter)
+	{
+		TakeDamageInter->TakeDamage(BulletData.Damage);
+	}
 	Destroy();
 }
 
