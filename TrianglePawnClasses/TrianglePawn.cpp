@@ -125,7 +125,7 @@ void ATrianglePawn::Shoot()
 
 void ATrianglePawn::TakeDamage(float Damage)
 {
-	Health -= FMath::TruncToInt(Damage);
+	///CurrentHealth -= FMath::TruncToInt(Damage);
 	
 	ChangeColorAfterHit(BaseTriangleDynamicMat);
 }
@@ -173,6 +173,8 @@ void ATrianglePawn::MakeHudWidget()
 	{
 		HudWidget = Cast<UHUDWidget>(CreateWidget(TrianglePawnController, HUDWidgetClass));
 		HudWidget->AddToViewport();
+		HudWidget->CurrentHearts = CurrentHearts;
+		HudWidget->CallAddHeartToTile();
 	}
 }
 

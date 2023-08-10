@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "TheBindingOfTriangle/TrianglePawnClasses/TrianglePawn.h"
 #include "HUDWidget.generated.h"
 
 /**
@@ -14,4 +15,23 @@ class THEBINDINGOFTRIANGLE_API UHUDWidget : public UUserWidget
 {
 	GENERATED_BODY()
 	
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TSubclassOf<class UHeartTileViewObject> HeartTileViewObjectClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		class UImage* BackgroundHudImage;	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		class UTileView* HeartsTileView;
+
+	TArray<FHeartStruct> CurrentHearts;
+
+	void CallAddHeartToTile() { AddHeartToTile(); }
+
+protected:
+	virtual void NativeConstruct() override; //konstruktor
+	virtual void NativeTick(const FGeometry& MyGeometry, float DeltaTime) override; //Tick
+
+private:
+	void AddHeartToTile();
 };

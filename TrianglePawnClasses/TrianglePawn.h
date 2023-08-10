@@ -62,6 +62,41 @@ struct FBulletStruct {
 	}
 };
 
+USTRUCT(BlueprintType)
+struct FHeartStruct {
+	GENERATED_USTRUCT_BODY();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings")
+		FString HeartName;
+	// 1 point of Health = Half of Heart
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings")
+		int32 Amount;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings")
+		UTexture2D* WholeHeartTexture;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings")
+		UTexture2D* HalfHeartTexture;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings")
+		bool bEmptyTextureAfterDelete = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings", meta = (EditCondition = "bEmptyTextureAfterDelete", EditConditionHides))
+		int32 MaxAmount;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings", meta = (EditCondition = "bEmptyTextureAfterDelete", EditConditionHides))
+		UTexture2D* EmptyHalfHeartTexture;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings", meta = (EditCondition = "bEmptyTextureAfterDelete", EditConditionHides))
+		UTexture2D* EmptyHeartTexture;
+
+	FHeartStruct()
+	{
+		HeartName = "";
+		Amount = 0;
+		WholeHeartTexture = nullptr;
+		HalfHeartTexture = nullptr;
+		bEmptyTextureAfterDelete = false;
+		MaxAmount = 0;
+		EmptyHalfHeartTexture = nullptr;
+		EmptyHeartTexture = nullptr;
+	}
+};
+
 UCLASS()
 class THEBINDINGOFTRIANGLE_API ATrianglePawn : public APawn, public ITakeDamageInterface
 {
@@ -102,9 +137,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Components")
 		class ACameraActor* TriangleCamera;
 
-	// 1 point of Health = Half of Heart
 	UPROPERTY(EditAnywhere, Category = "Player Settings")
-		int32 Health = 5;
+		TArray<FHeartStruct> CurrentHearts;
 	UPROPERTY(EditAnywhere, Category = "Player Settings|Widgets")
 		TSubclassOf<class UUserWidget> HUDWidgetClass;
 
