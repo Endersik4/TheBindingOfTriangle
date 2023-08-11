@@ -40,6 +40,7 @@ void UHUDWidget::AddHeartToTile()
 			{
 				NewHeartObject->HeartImageTex = NewHeart.EmptyHeartTexture;
 			}
+			else continue;
 
 			HeartsTileView->AddItem(NewHeartObject);
 			NewHeartObject->ConditionalBeginDestroy();

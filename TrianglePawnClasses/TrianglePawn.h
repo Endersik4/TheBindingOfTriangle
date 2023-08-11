@@ -80,8 +80,6 @@ struct FHeartStruct {
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings", meta = (EditCondition = "bEmptyTextureAfterDelete", EditConditionHides))
 		int32 MaxAmount;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings", meta = (EditCondition = "bEmptyTextureAfterDelete", EditConditionHides))
-		UTexture2D* EmptyHalfHeartTexture;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings", meta = (EditCondition = "bEmptyTextureAfterDelete", EditConditionHides))
 		UTexture2D* EmptyHeartTexture;
 
 	FHeartStruct()
@@ -92,7 +90,6 @@ struct FHeartStruct {
 		HalfHeartTexture = nullptr;
 		bEmptyTextureAfterDelete = false;
 		MaxAmount = 0;
-		EmptyHalfHeartTexture = nullptr;
 		EmptyHeartTexture = nullptr;
 	}
 };
