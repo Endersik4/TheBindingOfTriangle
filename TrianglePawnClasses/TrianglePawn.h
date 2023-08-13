@@ -71,6 +71,9 @@ struct FHeartStruct {
 	// 1 point of Health = Half of Heart
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings")
 		int32 Amount;
+	// How should the hearts be ordered in the TileView on the HUD Widget (1 = first, 2 - second, etc.)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings")
+		int32 HeartOrder = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings")
 		UTexture2D* WholeHeartTexture;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heart Settings")
@@ -86,12 +89,17 @@ struct FHeartStruct {
 	{
 		HeartName = "";
 		Amount = 0;
+		HeartOrder = 1;
 		WholeHeartTexture = nullptr;
 		HalfHeartTexture = nullptr;
 		bEmptyTextureAfterDelete = false;
 		MaxAmount = 0;
 		EmptyHeartTexture = nullptr;
 	}
+public:
+
+	bool operator<(const FHeartStruct& Heart) const { return HeartOrder < Heart.HeartOrder; }
+	bool operator>(const FHeartStruct& Heart) const { return HeartOrder > Heart.HeartOrder; }
 };
 
 UCLASS()
@@ -126,6 +134,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Settings")
 		bool bShouldDrawDebugBullets = false;
 
+	int32 GetCoinsAmount() const { return CoinsAmount; }
+	int32 GetBombsAmount() const { return BombsAmount; }
+	int32 GetKeysAmount() const { return KeysAmount; }
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UCapsuleComponent* TriangleCapsuleComp;
@@ -136,6 +148,12 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Player Settings")
 		TArray<FHeartStruct> CurrentHearts;
+	UPROPERTY(EditAnywhere, Category = "Player Settings|Inventory", meta = (ClampMin = "0", ClampMax = "99", UIMin = "0", UIMax = "99"))
+		int32 CoinsAmount;
+	UPROPERTY(EditAnywhere, Category = "Player Settings|Inventory", meta = (ClampMin = "0", ClampMax = "99", UIMin = "0", UIMax = "99"))
+		int32 BombsAmount = 1;
+	UPROPERTY(EditAnywhere, Category = "Player Settings|Inventory", meta = (ClampMin = "0", ClampMax = "99", UIMin = "0", UIMax = "99"))
+		int32 KeysAmount;
 	UPROPERTY(EditAnywhere, Category = "Player Settings|Widgets")
 		TSubclassOf<class UUserWidget> HUDWidgetClass;
 
@@ -170,9 +188,17 @@ private:
 	FTimerHandle SpawnAnotherBulletHandle;
 	void SetCanSpawnAnotherBullet() { bCanSpawnAnotherBullet = true; }
 
+	// Place Bomb
+	void PlaceBomb();
+
+	// Coins
+	bool AddCoins(int32 AmountToAdd);
+	bool AddAmount(int32& Value, int32 AmountToAdd);
+
 	// Widgets
 	class UHUDWidget* HudWidget;
 	void MakeHudWidget();
+	void RestartHudWidgetVariables();
 
 	// Camera
 	void SetTriangleCamera();

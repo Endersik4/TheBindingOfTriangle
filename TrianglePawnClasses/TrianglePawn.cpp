@@ -58,6 +58,8 @@ void ATrianglePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAxis(TEXT("Shoot_Forward"), this, &ATrianglePawn::Shoot_Forward);
 	PlayerInputComponent->BindAxis(TEXT("Shoot_Right"), this, &ATrianglePawn::Shoot_Right);
 
+	PlayerInputComponent->BindAction(TEXT("PlaceBomb"), IE_Pressed, this, &ATrianglePawn::PlaceBomb);
+
 }
 
 #pragma region //////////////// MOVEMENT ///////////////////
@@ -126,6 +128,14 @@ void ATrianglePawn::Shoot()
 void ATrianglePawn::TakeDamage(float Damage)
 {
 	///CurrentHealth -= FMath::TruncToInt(Damage);
+	CurrentHearts.Last().Amount -= FMath::TruncToInt(Damage);
+	if (CurrentHearts.Last().Amount <= 0)
+	{
+		if (CurrentHearts.Num() != 1) CurrentHearts.RemoveAt(CurrentHearts.Num() - 1);
+		else UE_LOG(LogTemp, Error, TEXT("DEAD"));	
+	}
+	CurrentHearts.Sort();
+	RestartHudWidgetVariables();
 	
 	ChangeColorAfterHit(BaseTriangleDynamicMat);
 }
@@ -173,10 +183,37 @@ void ATrianglePawn::MakeHudWidget()
 	{
 		HudWidget = Cast<UHUDWidget>(CreateWidget(TrianglePawnController, HUDWidgetClass));
 		HudWidget->AddToViewport();
-		HudWidget->CurrentHearts = CurrentHearts;
-		HudWidget->CallAddHeartToTile();
+		RestartHudWidgetVariables();
 	}
 }
+
+void ATrianglePawn::RestartHudWidgetVariables()
+{
+	if (HudWidget == nullptr) return;
+
+	HudWidget->CurrentHearts = CurrentHearts;
+	HudWidget->CallAddHeartToTile();
+}
+
+void ATrianglePawn::PlaceBomb()
+{
+	;
+}
+
+bool ATrianglePawn::AddCoins(int32 AmountToAdd)
+{
+	;
+}
+
+bool ATrianglePawn::AddAmount(int32& Value, int32 AmountToAdd)
+{
+	if (Value >= 99) return false;
+	Value += AmountToAdd;
+	if (Value > 99) CoinsAmount = 99;
+
+	return true;
+}
+
 
 void ATrianglePawn::SetTriangleCamera()
 {

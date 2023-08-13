@@ -23,10 +23,18 @@ public:
 		class UImage* BackgroundHudImage;	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 		class UTileView* HeartsTileView;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		class UTextBlock* CoinsAmount;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		class UTextBlock* BombsAmount;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		class UTextBlock* KeysAmount;
 
 	TArray<FHeartStruct> CurrentHearts;
 
 	void CallAddHeartToTile() { AddHeartToTile(); }
+
+	void GetItemsAmount(bool bCoins = true, bool bBombs = false, bool bKeys = false);
 
 protected:
 	virtual void NativeConstruct() override; //konstruktor
@@ -34,4 +42,6 @@ protected:
 
 private:
 	void AddHeartToTile();
+
+	class ATrianglePawn* TrianglePawn;
 };

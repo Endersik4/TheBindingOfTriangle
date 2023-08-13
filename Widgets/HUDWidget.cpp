@@ -4,11 +4,15 @@
 #include "TheBindingOfTriangle/Widgets/HUDWidget.h"
 #include "Components/Image.h"
 #include "Components/TileView.h"
+#include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "TheBindingOfTriangle/Widgets/HeartTileViewObject.h"
+#include "TheBindingOfTriangle//TrianglePawnClasses/TrianglePawn.h"
 
 void UHUDWidget::NativeConstruct()
 {
+	TrianglePawn = Cast<ATrianglePawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
 }
 
 void UHUDWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
@@ -45,6 +49,24 @@ void UHUDWidget::AddHeartToTile()
 			HeartsTileView->AddItem(NewHeartObject);
 			NewHeartObject->ConditionalBeginDestroy();
 		}
+	}
+}
+
+void UHUDWidget::GetItemsAmount(bool bCoins, bool bBombs, bool bKeys)
+{
+	if (TrianglePawn == nullptr) return;
+
+	if (bCoins == true)
+	{
+		CoinsAmount->SetText(FText::FromString(FString::FromInt(TrianglePawn->GetCoinsAmount())));
+	}
+	if (bBombs == true)
+	{
+		BombsAmount->SetText(FText::FromString(FString::FromInt(TrianglePawn->GetBombsAmount())));
+	}
+	if (bKeys == true)
+	{
+		KeysAmount->SetText(FText::FromString(FString::FromInt(TrianglePawn->GetKeysAmount())));
 	}
 }
 
