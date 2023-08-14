@@ -125,6 +125,9 @@ public:
 	// Take Damage Interface
 	virtual void TakeDamage(float Damage) override;
 
+	UFUNCTION()
+		void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 	UFUNCTION(BlueprintImplementableEvent)
 		void ChangeColorAfterHit(UMaterialInstanceDynamic* TriangleMaterial);
 
@@ -138,6 +141,10 @@ public:
 	int32 GetBombsAmount() const { return BombsAmount; }
 	int32 GetKeysAmount() const { return KeysAmount; }
 
+	bool AddCoins(int32 AmountToAdd);
+	bool AddBombs(int32 AmountToAdd);
+	bool AddKeys(int32 AmountToAdd);
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UCapsuleComponent* TriangleCapsuleComp;
@@ -148,6 +155,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Player Settings")
 		TArray<FHeartStruct> CurrentHearts;
+	UPROPERTY(EditAnywhere, Category = "Player Settings")
+		TSubclassOf<class AExplosiveBomb> ExplosiveBombClass;
 	UPROPERTY(EditAnywhere, Category = "Player Settings|Inventory", meta = (ClampMin = "0", ClampMax = "99", UIMin = "0", UIMax = "99"))
 		int32 CoinsAmount;
 	UPROPERTY(EditAnywhere, Category = "Player Settings|Inventory", meta = (ClampMin = "0", ClampMax = "99", UIMin = "0", UIMax = "99"))
@@ -191,8 +200,7 @@ private:
 	// Place Bomb
 	void PlaceBomb();
 
-	// Coins
-	bool AddCoins(int32 AmountToAdd);
+	// Add Item
 	bool AddAmount(int32& Value, int32 AmountToAdd);
 
 	// Widgets

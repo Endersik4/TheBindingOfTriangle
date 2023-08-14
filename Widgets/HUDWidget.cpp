@@ -52,22 +52,23 @@ void UHUDWidget::AddHeartToTile()
 	}
 }
 
-void UHUDWidget::GetItemsAmount(bool bCoins, bool bBombs, bool bKeys)
+void UHUDWidget::GetItemsAmount()
 {
 	if (TrianglePawn == nullptr) return;
 
-	if (bCoins == true)
-	{
-		CoinsAmount->SetText(FText::FromString(FString::FromInt(TrianglePawn->GetCoinsAmount())));
-	}
-	if (bBombs == true)
-	{
-		BombsAmount->SetText(FText::FromString(FString::FromInt(TrianglePawn->GetBombsAmount())));
-	}
-	if (bKeys == true)
-	{
-		KeysAmount->SetText(FText::FromString(FString::FromInt(TrianglePawn->GetKeysAmount())));
-	}
+	CoinsAmount->SetText(AddZeroToText(TrianglePawn->GetCoinsAmount()));
+	BombsAmount->SetText(AddZeroToText(TrianglePawn->GetBombsAmount()));
+	KeysAmount->SetText(AddZeroToText(TrianglePawn->GetKeysAmount()));
+}
+
+FText UHUDWidget::AddZeroToText(int32 Amount)
+{
+	FString Text;
+	if (Amount < 10) Text = "0";
+
+	Text += FString::FromInt(Amount);
+
+	return FText::FromString(Text);
 }
 
 

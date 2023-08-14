@@ -13,6 +13,8 @@
 
 #include "TheBindingOfTriangle/TrianglePawnClasses/Bullet.h"
 #include "TheBindingOfTriangle/Widgets/HUDWidget.h"
+#include "TheBindingOfTriangle/Interfaces/TakeItemInterface.h"
+#include "TheBindingOfTriangle/Items/ExplosiveBomb.h"
 
 // Sets default values
 ATrianglePawn::ATrianglePawn()
@@ -27,6 +29,9 @@ ATrianglePawn::ATrianglePawn()
 	TriangleMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Triangle Mesh Comp"));
 	TriangleMeshComp->SetupAttachment(RootComponent);
 	TriangleMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	TriangleCapsuleComp->OnComponentBeginOverlap.AddDynamic(this, &ATrianglePawn::OnComponentBeginOverlap);
+	TriangleCapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 
 }
 
@@ -176,6 +181,7 @@ void ATrianglePawn::SpawnBullet(FVector StartLocation, FVector DirForBullet)
 }
 #pragma endregion
 
+#pragma region ////////////////// WIDGETS //////////////////
 void ATrianglePawn::MakeHudWidget()
 {
 	APlayerController* TrianglePawnController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
@@ -193,27 +199,54 @@ void ATrianglePawn::RestartHudWidgetVariables()
 
 	HudWidget->CurrentHearts = CurrentHearts;
 	HudWidget->CallAddHeartToTile();
+	HudWidget->GetItemsAmount();
 }
+#pragma endregion
 
 void ATrianglePawn::PlaceBomb()
 {
-	;
+	if (BombsAmount <= 0) return;
+
+	GetWorld()->SpawnActor<AExplosiveBomb>(ExplosiveBombClass, GetActorLocation(), FRotator(0.f, -90.f, 90.f));
+	BombsAmount -= 1;
+	HudWidget->GetItemsAmount();
 }
 
-bool ATrianglePawn::AddCoins(int32 AmountToAdd)
+#pragma region /////////////////// ITEMS ///////////////////
+
+void ATrianglePawn::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	;
+	ITakeItemInterface* TakeInterface = Cast<ITakeItemInterface>(OtherActor);
+	if (TakeInterface == nullptr) return;
+
+	TakeInterface->TakeItem(this);
 }
 
 bool ATrianglePawn::AddAmount(int32& Value, int32 AmountToAdd)
 {
 	if (Value >= 99) return false;
 	Value += AmountToAdd;
-	if (Value > 99) CoinsAmount = 99;
+	if (Value > 99) Value = 99;
 
+	HudWidget->GetItemsAmount();
 	return true;
 }
 
+bool ATrianglePawn::AddCoins(int32 AmountToAdd)
+{
+	return AddAmount(CoinsAmount, AmountToAdd);
+}
+
+bool ATrianglePawn::AddBombs(int32 AmountToAdd)
+{
+	return AddAmount(BombsAmount, AmountToAdd);
+}
+
+bool ATrianglePawn::AddKeys(int32 AmountToAdd)
+{
+	return AddAmount(KeysAmount, AmountToAdd);
+}
+#pragma endregion
 
 void ATrianglePawn::SetTriangleCamera()
 {

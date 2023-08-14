@@ -34,7 +34,7 @@ public:
 
 	void CallAddHeartToTile() { AddHeartToTile(); }
 
-	void GetItemsAmount(bool bCoins = true, bool bBombs = false, bool bKeys = false);
+	void GetItemsAmount();
 
 protected:
 	virtual void NativeConstruct() override; //konstruktor
@@ -42,6 +42,8 @@ protected:
 
 private:
 	void AddHeartToTile();
+
+	FText AddZeroToText(int32 Amount);
 
 	class ATrianglePawn* TrianglePawn;
 };
