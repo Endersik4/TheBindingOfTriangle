@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/TimelineComponent.h"
 #include "ExplosiveBomb.generated.h"
 
 UCLASS()
@@ -23,6 +24,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION()
+		void ExplodeTimelineProgress(float Value);
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UStaticMeshComponent* BombMesh;
@@ -33,6 +36,15 @@ private:
 		float TimeToExplode;
 	UPROPERTY(EditDefaultsOnly, Category = "Bomb Settings")
 		float RadiusDistance;
+	UPROPERTY(EditDefaultsOnly, Category = "Bomb Settings")
+		UCurveFloat* ColorChangeExplodingCurve;
+	UPROPERTY(EditDefaultsOnly, Category = "Bomb Settings")
+		UCurveFloat* ScaleChangeExplodingCurve;
+
+	void SetExplodeTimeline();
+	FTimeline ExplodeCurveTimeline;
+
+	UMaterialInstanceDynamic* BombColorDynamic;
 
 	FTimerHandle ExplodeHandle;
 	void Explode();
