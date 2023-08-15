@@ -4,6 +4,9 @@
 #include "TheBindingOfTriangle/Items/ExplosiveBomb.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/PhysicsVolume.h"
+#include "Kismet/GameplayStatics.h"
+
+#include "TheBindingOfTriangle/Interfaces/TakeDamageInterface.h"
 
 // Sets default values
 AExplosiveBomb::AExplosiveBomb()
@@ -20,6 +23,7 @@ AExplosiveBomb::AExplosiveBomb()
 	BombMesh->GetBodyInstance()->bLockYRotation = true;
 	BombMesh->GetBodyInstance()->bLockZRotation = true;
 	BombMesh->GetBodyInstance()->bLockZTranslation = true;
+	BombMesh->GetBodyInstance()->SetMassScale(1400.f);
 }
 
 // Called when the game starts or when spawned
@@ -70,6 +74,35 @@ void AExplosiveBomb::ExplodeTimelineProgress(float Value)
 
 void AExplosiveBomb::Explode()
 {
+	FTransform NewTransform = FTransform(FRotator(0.f), GetActorLocation(), FVector(ExplosionParticleScale));
+	if (ExplosionParticle) UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionParticle, NewTransform);
+
+	ExplodeObjectsInRange();
+
 	Destroy();
 }
 
+void AExplosiveBomb::ExplodeObjectsInRange()
+{
+	TArray<FHitResult> HitsResultArray;
+	FCollisionShape SphereCol = FCollisionShape::MakeSphere(ExplodeDistance);
+	if (GetWorld()->SweepMultiByChannel(HitsResultArray, GetActorLocation(), GetActorLocation(), FQuat::Identity, ECC_Visibility, SphereCol)  == false) return;
+
+	if (bDrawDebugExplodeSphere) DrawDebugSphere(GetWorld(), GetActorLocation(), ExplodeDistance, 24, FColor::Red, true);
+
+	for (FHitResult Hit : HitsResultArray)
+	{
+		if (Hit.GetActor() == nullptr) continue;
+
+		ITakeDamageInterface* TakeDamageInterface = Cast<ITakeDamageInterface>(Hit.GetActor());
+		if (TakeDamageInterface)
+		{
+			TakeDamageInterface->TakeDamage(Damage, 0.f, FVector(0.f));
+		}
+
+		if (Hit.GetComponent()->IsSimulatingPhysics() == true)
+		{
+			Hit.GetComponent()->AddRadialImpulse(GetActorLocation(), ExplodeDistance, ExplodeImpulse * 10.f, ERadialImpulseFalloff::RIF_Constant, true);
+		}
+	}
+}

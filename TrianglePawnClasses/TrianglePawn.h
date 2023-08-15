@@ -15,15 +15,17 @@ struct FBulletStruct {
 
 	// After Distance bullet will be destroyed
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		float Distance = 300.f;
+		float Damage = 2.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
+		float Distance = 900.f;
 	// How fast bullet will go 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		float Speed = 1300.f;
+		float Speed = 1400.f;
 	// How many bullets will be spawned that is facing the same directions after given time (FrequencyTime)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		float FrequencyTime = 0.3f;
+		float FrequencyTime = 0.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		float Damage = 300.f;
+		float Impulse = 200.f;
 	// Should use Way Curve when spawned
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		bool bUseWayCurve = false;
@@ -33,6 +35,13 @@ struct FBulletStruct {
 	// Should Bullet back once the distance is reached and after this reach the distance again 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		bool bShouldBack = false;
+	// Longer button presses cause more bullet damage
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
+		bool bHoldBullet = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings", meta = (EditCondition = "bHoldBullet", EditConditionHides))
+		float HoldBulletTime = 3.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings", meta = (EditCondition = "bHoldBullet", EditConditionHides))
+		FLinearColor HoldBulletTriangleColor = FLinearColor::Yellow;
 	// How many bullets can be spawned at the same time
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once")
 		int32 Amount = 1;
@@ -45,21 +54,6 @@ struct FBulletStruct {
 	// How much rotate circe around player 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once")
 		float CirceAngle = 0.f;
-
-	FBulletStruct()
-	{
-		Distance = 0.f;
-		Speed = 1400.f;
-		FrequencyTime = 0.3f;
-		Damage = 0.f;
-		bUseWayCurve = false;
-		WayCurve = nullptr;
-		bShouldBack = false;
-		Amount = 1;
-		DegreeBetween = 45.f;
-		CirceRadius = 100.f;
-		CirceAngle = 0.f;
-	}
 };
 
 USTRUCT(BlueprintType)
@@ -123,7 +117,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	// Take Damage Interface
-	virtual void TakeDamage(float Damage) override;
+	virtual void TakeDamage(float Damage, float Impulse, FVector ImpulseDir) override;
 
 	UFUNCTION()
 		void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -137,6 +131,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Settings")
 		bool bShouldDrawDebugBullets = false;
 
+	UFUNCTION(BlueprintCallable)
+		FBulletStruct GetBulletData() const { return Bullet; }
+
 	int32 GetCoinsAmount() const { return CoinsAmount; }
 	int32 GetBombsAmount() const { return BombsAmount; }
 	int32 GetKeysAmount() const { return KeysAmount; }
@@ -144,10 +141,11 @@ public:
 	bool AddCoins(int32 AmountToAdd);
 	bool AddBombs(int32 AmountToAdd);
 	bool AddKeys(int32 AmountToAdd);
+	bool AddHearts(int32 AmountToAdd, FString HeartName);
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
-		class UCapsuleComponent* TriangleCapsuleComp;
+		class UBoxComponent* TriangleBoxComp;
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UStaticMeshComponent* TriangleMeshComp;
 	UPROPERTY(EditAnywhere, Category = "Components")
@@ -182,6 +180,7 @@ private:
 	FVector CounterMovement();
 
 	// Shoot 
+	bool CanShoot(float Axis);
 	void Shoot_Right(float Axis);
 	void Shoot_Forward(float Axis);
 	void Shoot();
@@ -199,6 +198,15 @@ private:
 
 	// Place Bomb
 	void PlaceBomb();
+	
+	// Hold Bullet
+	FTimerHandle HoldBulletHandle;
+	float DamageBeforeHoldBullet;
+	int32 HoldBulletDivideCounter = 1;
+	bool bShouldSkipHoldBullet = false;
+	bool HoldBullet();
+	void HoldBulletSetDamage();
+	void ClearHoldBullet();
 
 	// Add Item
 	bool AddAmount(int32& Value, int32 AmountToAdd);

@@ -23,7 +23,6 @@ void ABullet::BeginPlay()
 {
 	Super::BeginPlay();
 
-	BulletScale = BulletMeshComp->GetRelativeScale3D();
 }
 
 // Called every frame
@@ -40,8 +39,15 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 	ITakeDamageInterface* TakeDamageInter = Cast<ITakeDamageInterface>(Hit.GetActor());
 	if (TakeDamageInter)
 	{
-		TakeDamageInter->TakeDamage(BulletData.Damage);
+		TakeDamageInter->TakeDamage(BulletData.Damage, 0.f, FVector(0.f));
 	}
+
+	if (Hit.GetComponent()->IsSimulatingPhysics() == true)
+	{
+		FVector ImpulseForce = TrajectoryBullet * BulletData.Impulse;
+		Hit.GetComponent()->AddImpulse(ImpulseForce, NAME_None, true);
+	}
+
 	Destroy();
 }
 
@@ -73,7 +79,7 @@ void ABullet::ShouldUseCurveOffset(FVector& LocAfterOffset)
 #pragma region /////////////////// MOVEMENT ////////////////////////
 void ABullet::MovementBullet(float Delta)
 {
-	FVector NextLoc = GetActorLocation() + (TrajectoryBullet * BulletData.Speed * Delta) * BulletGoBack;
+	FVector NextLoc = GetActorLocation() + (TrajectoryBullet * BulletData.Speed * Delta);
 
 	if (TrackBulletDistance >= BulletData.Distance)
 	{
@@ -85,7 +91,7 @@ void ABullet::MovementBullet(float Delta)
 	}
 	else
 	{
-		TrackBulletDistance += (BulletData.Speed * Delta) * BulletGoBack;
+		TrackBulletDistance += (BulletData.Speed * Delta);
 	}
 
 	ShouldUseCurveOffset(NextLoc);
@@ -105,10 +111,22 @@ bool ABullet::ShouldBulletGoBack()
 {
 	if (BulletData.bShouldBack == false) return false;
 
-	BulletGoBack = -1;
 	TrackBulletDistance = 0.f;
+	TrajectoryBullet *= -1;
 	BulletData.bShouldBack = false;
 	return true;
 }
 #pragma endregion
+
+
+void ABullet::SetBulletScale(int32 NewCounter)
+{
+	if (BulletData.bHoldBullet == true)
+	{
+		BulletScale = BulletMeshComp->GetRelativeScale3D() + BulletMeshComp->GetRelativeScale3D() * (NewCounter / 10.f);
+		BulletMeshComp->SetRelativeScale3D(BulletScale);
+	}
+	else BulletScale = BulletMeshComp->GetRelativeScale3D();
+}
+
 

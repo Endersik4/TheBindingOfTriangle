@@ -27,6 +27,7 @@ public:
 
 	void SetTrajectoryBullet(FVector NewTrajectory) { TrajectoryBullet = NewTrajectory; }
 	void SetBulletData(FBulletStruct NewData) { BulletData = NewData; }
+	void SetBulletScale(int32 NewCounter);
 
 	// Offset Timeline
 	UFUNCTION()
@@ -55,8 +56,9 @@ private:
 	void MovementBullet(float Delta);
 	void SetScaleWhileDroppingDown(float Delta);
 
+	// Hold Bullet
+
 	// Bullet Go Back
-	int32 BulletGoBack = 1;
 	bool ShouldBulletGoBack();
 
 	

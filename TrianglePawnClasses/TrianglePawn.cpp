@@ -2,7 +2,7 @@
 
 
 #include "TheBindingOfTriangle/TrianglePawnClasses/TrianglePawn.h"
-#include "Components/CapsuleComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Camera/CameraActor.h"
 #include "Kismet/GameplayStatics.h"
@@ -22,16 +22,15 @@ ATrianglePawn::ATrianglePawn()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	TriangleCapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Triangle Capsule Comp"));
-	//TriangleCapsuleComp->SetConstraintMode(EDOFMode::XYPlane);
-	RootComponent = TriangleCapsuleComp;
+	TriangleBoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("Triangle Box Comp"));
+	RootComponent = TriangleBoxComp;
 
 	TriangleMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Triangle Mesh Comp"));
-	TriangleMeshComp->SetupAttachment(RootComponent);
+	TriangleMeshComp->SetupAttachment(TriangleBoxComp);
 	TriangleMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	TriangleCapsuleComp->OnComponentBeginOverlap.AddDynamic(this, &ATrianglePawn::OnComponentBeginOverlap);
-	TriangleCapsuleComp->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
+	TriangleBoxComp->OnComponentBeginOverlap.AddDynamic(this, &ATrianglePawn::OnComponentBeginOverlap);
+	TriangleBoxComp->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 
 }
 
@@ -40,8 +39,11 @@ void ATrianglePawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	DamageBeforeHoldBullet = Bullet.Damage;
+
 	SetTriangleCamera();
 	MakeHudWidget();
+
 	BaseTriangleDynamicMat = UMaterialInstanceDynamic::Create(TriangleMeshComp->GetMaterial(1), this);
 	TriangleMeshComp->SetMaterial(1, BaseTriangleDynamicMat);
 }
@@ -73,14 +75,14 @@ void ATrianglePawn::MoveForward(float Axis)
 {
 	float Speed = MovementForce * 10 / (GetInputAxisValue(FName(TEXT("Right"))) != 0.f ? 1.3f : 1);
 	FVector Force = Axis * GetActorForwardVector() * Speed + CounterMovement();
-	TriangleCapsuleComp->AddImpulse(Force);
+	TriangleBoxComp->AddImpulse(Force);
 }
 
 void ATrianglePawn::MoveRight(float Axis)
 {
 	float Speed = MovementForce * 10 / (GetInputAxisValue(FName(TEXT("Forward"))) != 0.f ? 1.3f : 1);
 	FVector Force = Axis * GetActorRightVector() * Speed + CounterMovement();
-	TriangleCapsuleComp->AddImpulse(Force);
+	TriangleBoxComp->AddImpulse(Force);
 }
 
 FVector ATrianglePawn::CounterMovement()
@@ -96,20 +98,24 @@ FVector ATrianglePawn::CounterMovement()
 #pragma region ////////////////// SHOOT ////////////////////
 void ATrianglePawn::Shoot_Right(float Axis)
 {
-	if (Axis == 0.f) return;
-	
 	if (Axis > 0.5f)  TriangleMeshComp->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 	else if (Axis < -0.5f)  TriangleMeshComp->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+
+	if (CanShoot(Axis) == false) return;
+
+	if (HoldBullet() == false) return;
 
 	Shoot();
 }
 
 void ATrianglePawn::Shoot_Forward(float Axis)
 {
-	if (Axis == 0.f) return;
-
 	if (Axis > 0.5f) TriangleMeshComp->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
 	else if (Axis < -0.5f) TriangleMeshComp->SetRelativeRotation(FRotator(0.f, -180.f, 0.f));
+
+	if (CanShoot(Axis) == false) return;
+
+	if (HoldBullet() == false) return;
 
 	Shoot();
 }
@@ -117,6 +123,7 @@ void ATrianglePawn::Shoot_Forward(float Axis)
 void ATrianglePawn::Shoot()
 {
 	DirectionForBullets();
+	ClearHoldBullet();
 
 	// Wait FrequencyTime to fire another bullet
 	if (bCanSpawnAnotherBullet == true)
@@ -126,11 +133,26 @@ void ATrianglePawn::Shoot()
 	}
 }
 
+bool ATrianglePawn::CanShoot(float Axis)
+{
+	if (Axis == 0.f)
+	{
+		if (Bullet.bHoldBullet == true && GetWorld()->GetTimerManager().IsTimerActive(HoldBulletHandle) == true 
+			&& GetInputAxisValue(FName(TEXT("Shoot_Forward"))) == 0.f && GetInputAxisValue(FName(TEXT("Shoot_Right"))) == 0.f)
+		{
+			bShouldSkipHoldBullet = true;
+		}
+		else return false;
+	}
+
+	return true;
+}
+
 #pragma endregion
 
 #pragma region /////////////// TAKE DAMAGE /////////////////
 
-void ATrianglePawn::TakeDamage(float Damage)
+void ATrianglePawn::TakeDamage(float Damage, float Impulse, FVector ImpulseDir)
 {
 	///CurrentHealth -= FMath::TruncToInt(Damage);
 	CurrentHearts.Last().Amount -= FMath::TruncToInt(Damage);
@@ -178,6 +200,7 @@ void ATrianglePawn::SpawnBullet(FVector StartLocation, FVector DirForBullet)
 	BulletActor->SetTrajectoryBullet(DirForBullet);
 	BulletActor->SetBulletData(Bullet);
 	BulletActor->SetOffsetTimeline();
+	BulletActor->SetBulletScale(HoldBulletDivideCounter);
 }
 #pragma endregion
 
@@ -207,10 +230,47 @@ void ATrianglePawn::PlaceBomb()
 {
 	if (BombsAmount <= 0) return;
 
-	GetWorld()->SpawnActor<AExplosiveBomb>(ExplosiveBombClass, GetActorLocation(), FRotator(0.f, -90.f, 90.f));
+	GetWorld()->SpawnActor<AExplosiveBomb>(ExplosiveBombClass, GetActorLocation(), FRotator(0.f));
 	BombsAmount -= 1;
 	HudWidget->GetItemsAmount();
 }
+
+#pragma region ////////////////// HOLD BULLET //////////////////
+bool ATrianglePawn::HoldBullet()
+{
+	if (Bullet.bHoldBullet == true && bShouldSkipHoldBullet == false)
+	{
+		if (GetWorld()->GetTimerManager().IsTimerActive(HoldBulletHandle) == false)
+		{
+			GetWorld()->GetTimerManager().SetTimer(HoldBulletHandle, this, &ATrianglePawn::HoldBulletSetDamage, Bullet.HoldBulletTime * 1 / 10.f, true);
+		}
+		return false;
+	}
+	bShouldSkipHoldBullet = false;
+	return true;
+}
+
+void ATrianglePawn::HoldBulletSetDamage()
+{
+	if (HoldBulletDivideCounter > 10) return;
+	Bullet.Damage += DamageBeforeHoldBullet* 1/10.f;
+
+	FLinearColor NewColor = UKismetMathLibrary::LinearColorLerp(FLinearColor::Green, FLinearColor::Yellow, HoldBulletDivideCounter / 10.f);
+	BaseTriangleDynamicMat->SetVectorParameterValue(FName("Color"), NewColor);
+
+	HoldBulletDivideCounter++;
+}
+
+void ATrianglePawn::ClearHoldBullet()
+{
+	if (Bullet.bHoldBullet == false) return;
+
+	GetWorld()->GetTimerManager().ClearTimer(HoldBulletHandle);
+	Bullet.Damage = DamageBeforeHoldBullet;
+	HoldBulletDivideCounter = 1;
+	BaseTriangleDynamicMat->SetVectorParameterValue(FName("Color"), FLinearColor::Green);
+}
+#pragma endregion
 
 #pragma region /////////////////// ITEMS ///////////////////
 
@@ -245,6 +305,26 @@ bool ATrianglePawn::AddBombs(int32 AmountToAdd)
 bool ATrianglePawn::AddKeys(int32 AmountToAdd)
 {
 	return AddAmount(KeysAmount, AmountToAdd);
+}
+bool ATrianglePawn::AddHearts(int32 AmountToAdd, FString HeartName)
+{
+	for (int i = 0; i != CurrentHearts.Num(); i++)
+	{
+		if (CurrentHearts[i].HeartName != HeartName) continue;
+		
+		if (CurrentHearts[i].bEmptyTextureAfterDelete == true)
+		{
+			if (CurrentHearts[i].MaxAmount - AmountToAdd < CurrentHearts[i].Amount) return false;
+		}
+
+		CurrentHearts[i].Amount += AmountToAdd;
+
+		break;
+	}
+	HudWidget->CurrentHearts = CurrentHearts;
+	HudWidget->CallAddHeartToTile();
+
+	return true;
 }
 #pragma endregion
 

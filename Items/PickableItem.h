@@ -12,7 +12,8 @@ enum TypeOfItem
 {
 	ECoin,
 	EBomb,
-	EKey
+	EKey,
+	EHeart
 };
 
 UCLASS()
@@ -39,10 +40,20 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UStaticMeshComponent* ItemMesh;
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
+		class UBoxComponent* ItemBoxComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Item Settings")
 		TEnumAsByte<TypeOfItem> ItemType;
 
+	UPROPERTY(EditAnywhere, Category = "Item Settings")
+		int32 ItemAmount = 1;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Item Settings", meta = (EditCondition = "ItemType == TypeOfItem::EHeart", EditConditionHides))
+		FString HeartName;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Item Settings", meta = (EditCondition = "ItemType == TypeOfItem::ECoin", EditConditionHides))
 		TArray<int32> RandomCoinRange = { 1, 6 };
+
+private:
 };

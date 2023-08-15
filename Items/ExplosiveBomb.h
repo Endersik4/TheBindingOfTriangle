@@ -31,20 +31,30 @@ private:
 		class UStaticMeshComponent* BombMesh;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Bomb Settings")
-		float Damage;
+		float Damage = 2.f;
 	UPROPERTY(EditDefaultsOnly, Category = "Bomb Settings")
-		float TimeToExplode;
+		float TimeToExplode = 2.f;
 	UPROPERTY(EditDefaultsOnly, Category = "Bomb Settings")
-		float RadiusDistance;
+		float ExplodeDistance = 350.f;
 	UPROPERTY(EditDefaultsOnly, Category = "Bomb Settings")
+		float ExplodeImpulse = 250.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Bomb Settings")
+		bool bDrawDebugExplodeSphere;
+	UPROPERTY(EditDefaultsOnly, Category = "Bomb Settings|Explosion")
+		UParticleSystem* ExplosionParticle;
+	UPROPERTY(EditDefaultsOnly, Category = "Bomb Settings|Explosion")
+		float ExplosionParticleScale = 1.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Bomb Settings|Explosion")
 		UCurveFloat* ColorChangeExplodingCurve;
-	UPROPERTY(EditDefaultsOnly, Category = "Bomb Settings")
+	UPROPERTY(EditDefaultsOnly, Category = "Bomb Settings|Explosion")
 		UCurveFloat* ScaleChangeExplodingCurve;
 
 	void SetExplodeTimeline();
 	FTimeline ExplodeCurveTimeline;
 
 	UMaterialInstanceDynamic* BombColorDynamic;
+
+	void ExplodeObjectsInRange();
 
 	FTimerHandle ExplodeHandle;
 	void Explode();
