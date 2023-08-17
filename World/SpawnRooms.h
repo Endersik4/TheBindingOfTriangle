@@ -26,11 +26,20 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void SetUpRoom();
 
+	UFUNCTION()
+		void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+		void OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Meshes")
 		class UInstancedStaticMeshComponent* FloorInstanceStaticMesh;
 	UPROPERTY(EditDefaultsOnly, Category = "Meshes")
 		class UInstancedStaticMeshComponent* WallInstanceStaticMesh;
+	UPROPERTY(EditDefaultsOnly, Category = "Meshes")
+		class UBoxComponent* ActivateRoomBoxComp;
+	UPROPERTY(EditDefaultsOnly, Category = "Meshes")
+		class UBoxComponent* CameraLocationBox;
 
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
 		int32 NumberOfFloors_X = 1;
@@ -40,19 +49,19 @@ private:
 		float DistanceBetweenFloors_X = 400.f;
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
 		float DistanceBetweenFloors_Y = 400.f;
-	UPROPERTY(EditAnywhere, Category = "Room Settings", meta = (ClampMin = "0"))
-		int32 NumberOfDoors = 2;
+	UPROPERTY(EditAnywhere, Category = "Room Settings")
+		float CameraChangeLocationTime = 0.3f;
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
 		FRandomStream RandomDoorSeed;
 
-	void AddWallAndDoor(bool bCanSpawnDoor, FVector RelativeLocation, FRotator RelativeRotation = FRotator(0.f));
-	void SetUpDoor();
-	int32 GetRandomValueForDoor(int32 WallsAmount);
+	void AddWallAndDoor(bool bAddDoor, FVector RelativeLocation, FRotator RelativeRotation = FRotator(0.f));
 
+	class ATrianglePawn* TrianglePawn;
 
-	TArray<int32> NumberOfCurrentDoors;
-	int32 AmountOfWalls;
-	TArray<int32> Doors;
+	bool bChangeCameraLocation;
+	float CameraLocationTimeElapsed;
+	FVector CameraStartPosition;
+	void SmoothCameraLocation(float Delta);
 
-
+	float easeInOutCubic(float t);
 };

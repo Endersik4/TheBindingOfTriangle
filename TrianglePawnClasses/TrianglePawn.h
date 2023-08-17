@@ -128,6 +128,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void DirectionForBullets();
 
+	UPROPERTY(EditAnywhere, Category = "Components")
+		class ACameraActor* TriangleCamera;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Settings")
 		bool bShouldDrawDebugBullets = false;
 
@@ -148,8 +151,6 @@ private:
 		class UBoxComponent* TriangleBoxComp;
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UStaticMeshComponent* TriangleMeshComp;
-	UPROPERTY(EditAnywhere, Category = "Components")
-		class ACameraActor* TriangleCamera;
 
 	UPROPERTY(EditAnywhere, Category = "Player Settings")
 		TArray<FHeartStruct> CurrentHearts;
