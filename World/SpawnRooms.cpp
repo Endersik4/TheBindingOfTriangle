@@ -73,20 +73,20 @@ void ASpawnRooms::SetUpRoom()
 			// Wall at the bottom
 			if (i == 1)
 			{
-				AddWallAndDoor(j == NumberOfFloors_Y - (NumberOfFloors_Y / 2), FVector(x, y, 0.f), FRotator(0.f, 90.f, 0.f));
+				AddWallAndDoor(j == NumberOfFloors_Y - (NumberOfFloors_Y / 2), FVector(x, y, 0.f), FRotator(0.f, -90.f, 0.f));
 			}
 
 			// Wall at the top
 			if (i == NumberOfFloors_X)
 			{
-				AddWallAndDoor(j == NumberOfFloors_Y - (NumberOfFloors_Y / 2), FVector(x + DistanceBetweenFloors_X, y, 0.f), FRotator(0.f, 90.f, 0.f));
+				AddWallAndDoor(j == NumberOfFloors_Y - (NumberOfFloors_Y / 2), FVector(x, y, 0.f), FRotator(0.f, 90.f, 0.f));
 			}
 
 			y += DistanceBetweenFloors_Y;
 		}
 
 		// Wall on the right
-		AddWallAndDoor(i == NumberOfFloors_X - (NumberOfFloors_X / 2), FVector(x, y, 0.f));
+		AddWallAndDoor(i == NumberOfFloors_X - (NumberOfFloors_X / 2), FVector(x, y - DistanceBetweenFloors_Y, 0.f), FRotator(0.f, 180.f,0.f));
 		x += DistanceBetweenFloors_X;
 	}
 }

@@ -42,15 +42,15 @@ private:
 		class UBoxComponent* CameraLocationBox;
 
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
-		int32 NumberOfFloors_X = 1;
+		int32 NumberOfFloors_X = 7;
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
-		int32 NumberOfFloors_Y = 1;
+		int32 NumberOfFloors_Y = 13;
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
-		float DistanceBetweenFloors_X = 400.f;
+		float DistanceBetweenFloors_X = 180.f;
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
-		float DistanceBetweenFloors_Y = 400.f;
+		float DistanceBetweenFloors_Y = 180.f;
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
-		float CameraChangeLocationTime = 0.3f;
+		float CameraChangeLocationTime = 0.4f;
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
 		FRandomStream RandomDoorSeed;
 
