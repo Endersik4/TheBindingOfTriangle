@@ -287,6 +287,7 @@ bool ATrianglePawn::AddAmount(int32& Value, int32 AmountToAdd)
 	if (Value >= 99) return false;
 	Value += AmountToAdd;
 	if (Value > 99) Value = 99;
+	if (Value < 0) Value = 0;
 
 	HudWidget->GetItemsAmount();
 	return true;

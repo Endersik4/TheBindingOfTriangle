@@ -3,6 +3,9 @@
 
 #include "TheBindingOfTriangle/World/Door.h"
 #include "Components/StaticMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
+
+#include "TheBindingOfTriangle/TrianglePawnClasses/TrianglePawn.h"
 
 // Sets default values
 ADoor::ADoor()
@@ -19,6 +22,7 @@ void ADoor::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	TrianglePawn = Cast<ATrianglePawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
 }
 
 // Called every frame
@@ -26,6 +30,7 @@ void ADoor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	OpenDoorWithKey();
 }
 
 void ADoor::ChangeDoor()
@@ -50,5 +55,25 @@ void ADoor::ChangeDoor()
 	default: UE_LOG(LogTemp, Warning, TEXT("DOOR TYPE WRONG"));
 	}
 
+}
+
+bool ADoor::CheckIfPlayerIsNear()
+{
+	if (TrianglePawn == nullptr) return false;
+
+	return FVector::Distance(TrianglePawn->GetActorLocation(), GetActorLocation()) <= MaxDistanceForOpenDoor;
+}
+
+void ADoor::OpenDoorWithKey()
+{
+	if (bIsDoorActive == false) return;
+
+	if (DoorStatus != EDS_KeyRequired || CheckIfPlayerIsNear() == false) return;
+
+	if (TrianglePawn->GetKeysAmount() <= 0) return;
+
+	DoorStatus = EDS_Open;
+	ChangeDoor();
+	TrianglePawn->AddKeys(-1);
 }
 

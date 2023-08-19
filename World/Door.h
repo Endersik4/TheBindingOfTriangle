@@ -49,6 +49,8 @@ private:
 		TEnumAsByte<EDoorType> DoorType = EDoorType::EDT_Room;
 	UPROPERTY(EditAnywhere, Category = "Door settings")
 		TEnumAsByte<EDoorStatus> DoorStatus = EDoorStatus::EDS_Open;
+	UPROPERTY(EditAnywhere, Category = "Door settings", meta = (EditCondition = "DoorStatus == EDoorStatus::EDS_KeyRequired", EditConditionHides))
+		float MaxDistanceForOpenDoor = 100.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Door settings|Door Type")
 		UMaterialInstance* DoorRoomMaterial;
@@ -63,6 +65,10 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Door settings|Door Status")
 		UStaticMesh* DoorKeyMesh;
 
+	bool CheckIfPlayerIsNear();
 
+	bool bIsDoorActive = true;
+	void OpenDoorWithKey();
 
+	class ATrianglePawn* TrianglePawn;
 };
