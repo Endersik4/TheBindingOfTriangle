@@ -6,6 +6,15 @@
 #include "GameFramework/Actor.h"
 #include "SpawnRooms.generated.h"
 
+enum EWallSide
+{
+	EWS_Left,
+	EWS_Right,
+	EWS_Front,
+	EWS_Back,
+	EWS_None
+};
+
 UCLASS()
 class THEBINDINGOFTRIANGLE_API ASpawnRooms : public AActor
 {
@@ -31,6 +40,10 @@ public:
 	UFUNCTION()
 		void OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	static int32 AmountOfSpawnedRooms;
+
+	void SetFirstDoorSide(EWallSide NewSide) { FirstDoorSide = NewSide; }
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Meshes")
 		class UInstancedStaticMeshComponent* FloorInstanceStaticMesh;
@@ -42,6 +55,8 @@ private:
 		class UBoxComponent* CameraLocationBox;
 
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
+		bool bShouldSpawn;
+	UPROPERTY(EditAnywhere, Category = "Room Settings")
 		int32 NumberOfFloors_X = 7;
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
 		int32 NumberOfFloors_Y = 13;
@@ -52,9 +67,19 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
 		float CameraChangeLocationTime = 0.4f;
 	UPROPERTY(EditAnywhere, Category = "Room Settings")
+		int32 MaxRooms = 10;
+	UPROPERTY(EditAnywhere, Category = "Room Settings")
+		TSubclassOf<class ADoor> DoorClass;
+	UPROPERTY(EditAnywhere, Category = "Room Settings")
+		TSubclassOf<ASpawnRooms> NormalRoomClass;
+	UPROPERTY(EditAnywhere, Category = "Room Settings")
 		FRandomStream RandomDoorSeed;
 
-	void AddWallAndDoor(bool bAddDoor, FVector RelativeLocation, FRotator RelativeRotation = FRotator(0.f));
+	void AddWallAndDoor(bool bAddDoor, EWallSide Side, FVector RelativeLocation, FRotator RelativeRotation = FRotator(0.f));
+	void SpawnNewRoom(EWallSide Side);
+
+	EWallSide FirstDoorSide = EWS_None;
+	void InvertFirstDoorSide();
 
 	class ATrianglePawn* TrianglePawn;
 

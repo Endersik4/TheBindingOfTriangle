@@ -9,6 +9,7 @@
 #include "Camera/CameraActor.h"
 
 #include "TheBindingOfTriangle/TrianglePawnClasses/TrianglePawn.h"
+#include "TheBindingOfTriangle/World/Door.h"
 
 
 // Sets default values
@@ -26,9 +27,6 @@ ASpawnRooms::ASpawnRooms()
 	ActivateRoomBoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("Activate Room Box Component"));
 	ActivateRoomBoxComp->SetupAttachment(FloorInstanceStaticMesh);
 
-	ActivateRoomBoxComp->OnComponentBeginOverlap.AddDynamic(this, &ASpawnRooms::OnBoxBeginOverlap);
-	ActivateRoomBoxComp->OnComponentEndOverlap.AddDynamic(this, &ASpawnRooms::OnBoxEndOverlap);
-
 	CameraLocationBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Camera Location Box Component"));
 	CameraLocationBox->SetupAttachment(FloorInstanceStaticMesh);
 	CameraLocationBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -40,7 +38,19 @@ void ASpawnRooms::BeginPlay()
 	Super::BeginPlay();
 	
 	TrianglePawn = Cast<ATrianglePawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (bShouldSpawn == true)
+	{
+		AmountOfSpawnedRooms = 0;
+		bShouldSpawn = false;
+	}
+	InvertFirstDoorSide();
+	SetUpRoom();
+
+	ActivateRoomBoxComp->OnComponentBeginOverlap.AddDynamic(this, &ASpawnRooms::OnBoxBeginOverlap);
+	ActivateRoomBoxComp->OnComponentEndOverlap.AddDynamic(this, &ASpawnRooms::OnBoxEndOverlap);
 }
+
+int ASpawnRooms::AmountOfSpawnedRooms = 0;
 
 // Called every frame
 void ASpawnRooms::Tick(float DeltaTime)
@@ -64,7 +74,7 @@ void ASpawnRooms::SetUpRoom()
 		float y = 0.f;
 			
 		// Wall on the left
-		AddWallAndDoor(i == NumberOfFloors_X - (NumberOfFloors_X / 2), FVector(x, 0.f, 0.f));
+		AddWallAndDoor(i == NumberOfFloors_X - (NumberOfFloors_X / 2), EWS_Left, FVector(x, 0.f, 0.f));
 
 		for (int32 j = 1; j <= NumberOfFloors_Y; j++)
 		{
@@ -73,27 +83,70 @@ void ASpawnRooms::SetUpRoom()
 			// Wall at the bottom
 			if (i == 1)
 			{
-				AddWallAndDoor(j == NumberOfFloors_Y - (NumberOfFloors_Y / 2), FVector(x, y, 0.f), FRotator(0.f, -90.f, 0.f));
+				AddWallAndDoor(j == NumberOfFloors_Y - (NumberOfFloors_Y / 2), EWS_Back, FVector(x, y, 0.f), FRotator(0.f, -90.f, 0.f));
 			}
 
 			// Wall at the top
 			if (i == NumberOfFloors_X)
 			{
-				AddWallAndDoor(j == NumberOfFloors_Y - (NumberOfFloors_Y / 2), FVector(x, y, 0.f), FRotator(0.f, 90.f, 0.f));
+				AddWallAndDoor(j == NumberOfFloors_Y - (NumberOfFloors_Y / 2), EWS_Front, FVector(x, y, 0.f), FRotator(0.f, 90.f, 0.f));
 			}
 
 			y += DistanceBetweenFloors_Y;
 		}
 
 		// Wall on the right
-		AddWallAndDoor(i == NumberOfFloors_X - (NumberOfFloors_X / 2), FVector(x, y - DistanceBetweenFloors_Y, 0.f), FRotator(0.f, 180.f,0.f));
+		AddWallAndDoor(i == NumberOfFloors_X - (NumberOfFloors_X / 2), EWS_Right, FVector(x, y - DistanceBetweenFloors_Y, 0.f), FRotator(0.f, 180.f,0.f));
 		x += DistanceBetweenFloors_X;
 	}
 }
 
-void ASpawnRooms::AddWallAndDoor(bool bAddDoor, FVector RelativeLocation, FRotator RelativeRotation)
+void ASpawnRooms::AddWallAndDoor(bool bAddDoor, EWallSide Side, FVector RelativeLocation, FRotator RelativeRotation)
 {
-	if (bAddDoor == false) WallInstanceStaticMesh->AddInstance(FTransform(RelativeRotation, RelativeLocation));
+	if (bAddDoor == true)
+	{
+		if (FirstDoorSide == Side)
+		{
+			GetWorld()->SpawnActor<ADoor>(DoorClass, GetActorLocation() + RelativeLocation, RelativeRotation);
+			return;
+		}
+
+		bool bCanSpawnRoom = UKismetMathLibrary::RandomBoolWithWeight(0.5f);
+		if (bCanSpawnRoom == true && AmountOfSpawnedRooms <= MaxRooms)
+		{
+			GetWorld()->SpawnActor<ADoor>(DoorClass, GetActorLocation() + RelativeLocation, RelativeRotation);
+			AmountOfSpawnedRooms++;
+			SpawnNewRoom(Side);
+			return;
+		}	
+	}
+
+	WallInstanceStaticMesh->AddInstance(FTransform(RelativeRotation, RelativeLocation));
+}
+
+void ASpawnRooms::SpawnNewRoom(EWallSide Side)
+{
+	FVector Location = GetActorLocation();
+	switch (Side)
+	{
+	case EWS_Front: Location += GetActorForwardVector() * (DistanceBetweenFloors_X * NumberOfFloors_X + DistanceBetweenFloors_X); break;
+	case EWS_Back: Location += -GetActorForwardVector() * (DistanceBetweenFloors_X * NumberOfFloors_X + DistanceBetweenFloors_X); break;
+	case EWS_Right: Location += GetActorRightVector() * (DistanceBetweenFloors_Y * NumberOfFloors_Y + DistanceBetweenFloors_Y); break;
+	case EWS_Left: Location += -GetActorRightVector() * (DistanceBetweenFloors_Y * NumberOfFloors_Y + DistanceBetweenFloors_Y); break;
+	}
+	FTransform SpawnLocAndRot = FTransform(FRotator(0.f), Location, FVector(1.f));
+	ASpawnRooms* SpawnedRoom = GetWorld()->SpawnActorDeferred<ASpawnRooms>(NormalRoomClass, SpawnLocAndRot);
+	SpawnedRoom->SetFirstDoorSide(Side);
+	SpawnedRoom->FinishSpawning(SpawnLocAndRot);
+}
+
+void ASpawnRooms::InvertFirstDoorSide()
+{
+	if (FirstDoorSide == EWS_Front) FirstDoorSide = EWS_Back;
+	else if (FirstDoorSide == EWS_Back) FirstDoorSide = EWS_Front;
+	else if (FirstDoorSide == EWS_Right) FirstDoorSide = EWS_Left;
+	else if (FirstDoorSide == EWS_Left) FirstDoorSide = EWS_Right;
+
 }
 
 #pragma endregion
