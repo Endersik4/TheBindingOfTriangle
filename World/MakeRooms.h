@@ -6,26 +6,30 @@
 #include "GameFramework/Actor.h"
 #include "MakeRooms.generated.h"
 
+enum ERoomType {
+	ERT_Normal,
+	ERT_Award,
+	ERT_Boss,
+	ERT_EndRoom,
+	ERT_Spawn
+};
+
+
 USTRUCT(BlueprintType)
-struct FGrid {
+struct FRoom {
 
 	GENERATED_USTRUCT_BODY();
 
 	UPROPERTY(EditAnywhere)
-		FVector Location;
-	UPROPERTY(EditAnywhere)
-		bool bIsOccupied;
+		FVector Location = FVector(0.f);
 
-	FGrid()
-	{
-		Location = FVector(0.f);
-		bIsOccupied = false;
-	}
+	ERoomType RoomType = ERT_Normal;
+	int32 DistanceFromStartRoom = 0;
+	int32 AmountOfDoors = 0;
+	bool bDoorTop, bDoorBot, bDoorRight, bDoorLeft;
 
-	FGrid(FVector NewLoc, bool bOccupied)
+	FRoom(FVector NewLoc = FVector(0.f), ERoomType Type = ERT_Normal, int32 Distance = 0, int32 Doors = 0) : Location(NewLoc), RoomType(Type), DistanceFromStartRoom(Distance), AmountOfDoors(Doors)
 	{
-		Location = NewLoc;
-		bIsOccupied = bOccupied;
 	}
 };
 
@@ -47,22 +51,31 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-		void SpawnDebugGrid();
+		void GenerateRoomsLayout();
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
-		int32 FriendsAmount = 2;
+		int32 HowManyRoutes = 3;
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
-		int32 HowManyRooms = 8;
+		int32 HowManyRooms = 4;
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
-		int32 Rows_Grid_X = 5;
+		float DistanceBetweenRooms_X = 440.f;
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
-		int32 Rows_Grid_Y = 7;
+		float DistanceBetweenRooms_Y = 440.f;
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
-		float DistanceBetweenGrid_X = 1440.f;
+		FRandomStream SpawnRoomsSeed;
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
-		float DistanceBetweenGrid_Y = 1440.f;
+		bool bDrawDebugRoomLayout = false;
 
-	TMap<FVector, FGrid> GridData;
+	TMap<FVector, FRoom> AllRoomsData;
+	TMap<FVector, FRoom> EndRoomsData;
 
+	bool CanRoomBeAtGivenLoc(FVector &RoomLocation, int32 &Index, int32& StartRoomDistance, int32& SpawnRoomCounter);
+	FVector PickRandomRoomLocation(FRoom& PickedGrid, const TMap<FVector, FRoom>& RoomsData);
+
+	bool CheckNeighbours(const FVector& GridLoc, bool bAddDoors = false, FRoom* GridRoom = nullptr);
+
+	void SpawnRooms();
+	FVector FindFurthestRoom();
+	void SpawnAwardRoom();
 };
