@@ -146,6 +146,8 @@ public:
 	bool AddKeys(int32 AmountToAdd);
 	bool AddHearts(int32 AmountToAdd, FString HeartName);
 
+	void ChangeCameraRoom(bool bChangeLoc, FVector CameraLocation);
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UBoxComponent* TriangleBoxComp;
@@ -164,6 +166,8 @@ private:
 		int32 KeysAmount;
 	UPROPERTY(EditAnywhere, Category = "Player Settings|Widgets")
 		TSubclassOf<class UUserWidget> HUDWidgetClass;
+	UPROPERTY(EditAnywhere, Category = "Room Settings|Camera")
+		float CameraChangeLocationTime = 0.4f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Movement Settings")
 		float MovementForce = 3000.f;
@@ -219,5 +223,14 @@ private:
 
 	// Camera
 	void SetTriangleCamera();
+	// Move camera
+	bool bChangeCameraLocation;
+	float CameraLocationTimeElapsed;
+	FVector CameraStartPosition;
+	FVector CameraEndPosition;
+	void SmoothCameraLocation(float Delta);
+
+	// Math
+	float easeInOutCubic(float t);
 
 };

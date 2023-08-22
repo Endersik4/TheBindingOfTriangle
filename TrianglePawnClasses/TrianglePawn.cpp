@@ -52,6 +52,8 @@ void ATrianglePawn::BeginPlay()
 void ATrianglePawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	SmoothCameraLocation(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -334,4 +336,36 @@ void ATrianglePawn::SetTriangleCamera()
 	if (TriangleCamera == nullptr) return;
 
 	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetViewTarget(TriangleCamera);
+}
+
+#pragma region ////////////////// CAMERA /////////////////////
+void ATrianglePawn::ChangeCameraRoom(bool bChangeLoc, FVector CameraLocation)
+{
+	bChangeCameraLocation = bChangeLoc;
+	CameraStartPosition = TriangleCamera->GetActorLocation();
+	CameraEndPosition = CameraLocation;
+}
+void ATrianglePawn::SmoothCameraLocation(float Delta)
+{
+	if (bChangeCameraLocation == false) return;
+
+	CameraLocationTimeElapsed += Delta;
+	float t = FMath::Clamp(CameraLocationTimeElapsed / CameraChangeLocationTime, 0, 1);
+
+	t = easeInOutCubic(t);
+
+	FVector NewLocation = FMath::Lerp(CameraStartPosition, CameraEndPosition, t);
+	TriangleCamera->SetActorLocation(NewLocation);
+
+	if (t >= 1.f)
+	{
+		bChangeCameraLocation = false;
+		CameraLocationTimeElapsed = 0.f;
+	}
+}
+#pragma endregion
+
+float ATrianglePawn::easeInOutCubic(float t)
+{
+	return t < 0.5 ? 4 * FMath::Pow(t, 3) : 1 - FMath::Pow(-2 * t + 2, 3) / 2;
 }

@@ -4,21 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "RoomData.h"
 #include "Door.generated.h"
 
-UENUM(BlueprintType)
-enum EDoorStatus {
-	EDS_Open,
-	EDS_Closed,
-	EDS_KeyRequired
-};
-
-UENUM(BlueprintType)
-enum EDoorType {
-	EDT_Room,
-	EDT_Boss,
-	EDT_Award
-};
 
 UCLASS()
 class THEBINDINGOFTRIANGLE_API ADoor : public AActor
@@ -40,6 +28,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void ChangeDoor();
+
+	void SetDoorType(EDoorType NewType) { DoorType = NewType; }
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")

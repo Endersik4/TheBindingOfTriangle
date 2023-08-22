@@ -4,34 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "RoomData.h"
+
 #include "MakeRooms.generated.h"
-
-enum ERoomType {
-	ERT_Normal,
-	ERT_Award,
-	ERT_Boss,
-	ERT_EndRoom,
-	ERT_Spawn
-};
-
-
-USTRUCT(BlueprintType)
-struct FRoom {
-
-	GENERATED_USTRUCT_BODY();
-
-	UPROPERTY(EditAnywhere)
-		FVector Location = FVector(0.f);
-
-	ERoomType RoomType = ERT_Normal;
-	int32 DistanceFromStartRoom = 0;
-	int32 AmountOfDoors = 0;
-	bool bDoorTop, bDoorBot, bDoorRight, bDoorLeft;
-
-	FRoom(FVector NewLoc = FVector(0.f), ERoomType Type = ERT_Normal, int32 Distance = 0, int32 Doors = 0) : Location(NewLoc), RoomType(Type), DistanceFromStartRoom(Distance), AmountOfDoors(Doors)
-	{
-	}
-};
 
 UCLASS()
 class THEBINDINGOFTRIANGLE_API AMakeRooms : public AActor
@@ -55,27 +30,36 @@ public:
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
-		int32 HowManyRoutes = 3;
+		int32 HowManyRoutes = 5;
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
-		int32 HowManyRooms = 4;
+		int32 HowManyRooms = 3;
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
-		float DistanceBetweenRooms_X = 440.f;
+		float DistanceBetweenRooms_X = 1360.f;
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
-		float DistanceBetweenRooms_Y = 440.f;
+		float DistanceBetweenRooms_Y = 2440.f;
+	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
+		TSubclassOf<class ARoom> NormalRoomClass;
+	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
+		TSubclassOf<class ARoom> AwardRoomClass;
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
 		FRandomStream SpawnRoomsSeed;
-	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Room Spawner settings", meta = (AllowPrivateAccess = "true"))
 		bool bDrawDebugRoomLayout = false;
 
-	TMap<FVector, FRoom> AllRoomsData;
-	TMap<FVector, FRoom> EndRoomsData;
+	UPROPERTY(VisibleAnywhere)
+		TMap<FVector, FRoomStruct> AllRoomsData;
+
+	TArray<FVector> EndRoomsLocations;
 
 	bool CanRoomBeAtGivenLoc(FVector &RoomLocation, int32 &Index, int32& StartRoomDistance, int32& SpawnRoomCounter);
-	FVector PickRandomRoomLocation(FRoom& PickedGrid, const TMap<FVector, FRoom>& RoomsData);
+	bool CheckNeighbours(const FVector& GridLoc, bool bAddDoors = false, FRoomStruct* GridRoom = nullptr);
 
-	bool CheckNeighbours(const FVector& GridLoc, bool bAddDoors = false, FRoom* GridRoom = nullptr);
-
+	void FinishRoomLayout();
 	void SpawnRooms();
-	FVector FindFurthestRoom();
+	void SetEndRooms(FRoomStruct* FoundRoom);
 	void SpawnAwardRoom();
+	FVector FindFurthestRoom();
+
+	FRoomStruct* PickRandomRoom(TArray<FVector> RoomsLocations);
+
 };

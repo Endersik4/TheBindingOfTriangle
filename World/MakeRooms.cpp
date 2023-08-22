@@ -4,6 +4,8 @@
 #include "TheBindingOfTriangle/World/MakeRooms.h"
 #include "Kismet/KismetMathLibrary.h"
 
+#include "TheBindingOfTriangle/World/Room.h"
+
 // Sets default values
 AMakeRooms::AMakeRooms()
 {
@@ -16,6 +18,10 @@ AMakeRooms::AMakeRooms()
 void AMakeRooms::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GenerateRoomsLayout();
+	SpawnAwardRoom();
+	SpawnRooms();
 }
 
 // Called every frame
@@ -28,11 +34,16 @@ void AMakeRooms::Tick(float DeltaTime)
 #pragma region ////////////////// GENERATE ROOMS LAYOUT //////////////////
 void AMakeRooms::GenerateRoomsLayout()
 {	
-	AllRoomsData.Empty();
-	EndRoomsData.Empty();
-	SpawnRoomsSeed.Reset();
+	// Prevent the bug that cant find room neighbours because there is very small diffrence between room locations
+	FVector TruncateLocation = FVector(FMath::TruncToInt(GetActorLocation().X), FMath::TruncToInt(GetActorLocation().Y), FMath::TruncToInt(GetActorLocation().Z));
+	SetActorLocation(TruncateLocation);
 
-	AllRoomsData.Add(GetActorLocation(), FRoom(GetActorLocation(), ERT_Spawn));
+	AllRoomsData.Empty();
+	EndRoomsLocations.Empty();
+	SpawnRoomsSeed.Reset();
+	if (bDrawDebugRoomLayout == false) SpawnRoomsSeed.GenerateNewSeed();
+
+	AllRoomsData.Add(GetActorLocation(), FRoomStruct(GetActorLocation(), ERT_Spawn));
 
 	if (bDrawDebugRoomLayout == true) DrawDebugBox(GetWorld(), GetActorLocation(), FVector(200.f, 200.f, 0.f), FColor::Blue, true);
 	
@@ -45,30 +56,26 @@ void AMakeRooms::GenerateRoomsLayout()
 		for (int32 j = 0; j != HowManyRooms; j++)
 		{
 			int32 Side = UKismetMathLibrary::RandomIntegerInRangeFromStream(1, 4, SpawnRoomsSeed); // 1 - Forward, 2 - Back, 3 - Right, 4 - Left 
-			FVector NextRoomDirection;
 
 			switch (Side)
 			{
-			case 1: NextRoomDirection = GetActorForwardVector(); break;
-			case 2: NextRoomDirection = -GetActorForwardVector(); break;
-			case 3: NextRoomDirection = GetActorRightVector(); break;
-			case 4: NextRoomDirection = -GetActorRightVector(); break;
+			case 1: NextRoomLocation += GetActorForwardVector() * DistanceBetweenRooms_X; break;
+			case 2: NextRoomLocation += -GetActorForwardVector() * DistanceBetweenRooms_X; break;
+			case 3: NextRoomLocation += GetActorRightVector() * DistanceBetweenRooms_Y; break;
+			case 4: NextRoomLocation += -GetActorRightVector() * DistanceBetweenRooms_Y; break;
 			}
-
-			NextRoomLocation += NextRoomDirection * DistanceBetweenRooms_X;
 
 			if (CanRoomBeAtGivenLoc(NextRoomLocation, j, DistanceFromStartRoom, CantRoomSpawnCounter) == false) continue;
 
 			DistanceFromStartRoom++;
-			FRoom NewRoom(NextRoomLocation, ERT_Normal, DistanceFromStartRoom);
+			FRoomStruct NewRoom(NextRoomLocation, ERT_Normal, DistanceFromStartRoom);
 			AllRoomsData.Add(NextRoomLocation, NewRoom);
 
 			if (bDrawDebugRoomLayout == true) DrawDebugBox(GetWorld(), NextRoomLocation, FVector(200.f, 200.f, 0.f), FColor::White, true);
 		}
 	}
 
-	SpawnRooms();
-	SpawnAwardRoom();
+	FinishRoomLayout();
 }
 
 bool AMakeRooms::CanRoomBeAtGivenLoc(FVector& RoomLocation, int32& Index, int32& StartRoomDistance, int32& SpawnRoomCounter)
@@ -81,100 +88,145 @@ bool AMakeRooms::CanRoomBeAtGivenLoc(FVector& RoomLocation, int32& Index, int32&
 		if (SpawnRoomCounter > 100) Index = HowManyRooms; // Avoid the endless loop
 
 		Index--;
-		FRoom Room;
-		RoomLocation = PickRandomRoomLocation(Room, AllRoomsData);
-		StartRoomDistance = Room.DistanceFromStartRoom;
+
+		TArray<FVector> AllRoomsLocations;
+		AllRoomsData.GenerateKeyArray(AllRoomsLocations);
+		FRoomStruct* RandomRoom = PickRandomRoom(AllRoomsLocations);
+		if (RandomRoom == nullptr) return false;
+
+		StartRoomDistance = RandomRoom->DistanceFromStartRoom;
+		RoomLocation = RandomRoom->Location;
 		return false;
 	}
 
 	return true;
 }
 
-bool AMakeRooms::CheckNeighbours(const FVector& GridLoc, bool bAddDoors, FRoom* GridRoom)
+bool AMakeRooms::CheckNeighbours(const FVector& GridLoc, bool bAddDoors, FRoomStruct* GridRoom)
 {
 	int32 Neighbours = 0;
 	if (AllRoomsData.Find(GridLoc + GetActorForwardVector() * DistanceBetweenRooms_X)) {
 		Neighbours++;
-		if (bAddDoors) { GridRoom->bDoorTop = true; }
+		if (bAddDoors) GridRoom->DoorsType[0] = EDT_Room;
 	}
 	if (AllRoomsData.Find(GridLoc + -GetActorForwardVector() * DistanceBetweenRooms_X)) {
 		Neighbours++;
-		if (bAddDoors) GridRoom->bDoorBot = true;
+		if (bAddDoors) GridRoom->DoorsType[1] = EDT_Room;
 	}
-	if (AllRoomsData.Find(GridLoc + GetActorRightVector() * DistanceBetweenRooms_X)) {
+	if (AllRoomsData.Find(GridLoc + GetActorRightVector() * DistanceBetweenRooms_Y)) {
 		Neighbours++;
-		if (bAddDoors) GridRoom->bDoorRight = true;
+		if (bAddDoors)  GridRoom->DoorsType[2] = EDT_Room;
 	}
-	if (AllRoomsData.Find(GridLoc + -GetActorRightVector() * DistanceBetweenRooms_X)) {
+	if (AllRoomsData.Find(GridLoc + -GetActorRightVector() * DistanceBetweenRooms_Y)) {
 		Neighbours++;
-		if (bAddDoors) GridRoom->bDoorLeft = true;
+		if (bAddDoors) GridRoom->DoorsType[3] = EDT_Room;
 	}
+
 	if (bAddDoors)
 	{
 		GridRoom->AmountOfDoors = Neighbours;
-		return true; // There is no need to perform the rest of the function
+		return true; // There is no need to do the rest of the function
 	}
 
 	// Corners
-	if (AllRoomsData.Find(GridLoc + (GetActorForwardVector() + GetActorRightVector()) * DistanceBetweenRooms_X)) Neighbours++;
-	if (AllRoomsData.Find(GridLoc + (GetActorForwardVector() + -GetActorRightVector()) * DistanceBetweenRooms_X)) Neighbours++;
-	if (AllRoomsData.Find(GridLoc + (-GetActorForwardVector() + GetActorRightVector()) * DistanceBetweenRooms_X)) Neighbours++;
-	if (AllRoomsData.Find(GridLoc + (-GetActorForwardVector() + -GetActorRightVector()) * DistanceBetweenRooms_X)) Neighbours++;
+	if (AllRoomsData.Find(GridLoc + (GetActorForwardVector() * DistanceBetweenRooms_X + GetActorRightVector() * DistanceBetweenRooms_Y))) Neighbours++;
+	if (AllRoomsData.Find(GridLoc + (GetActorForwardVector() * DistanceBetweenRooms_X + -GetActorRightVector() * DistanceBetweenRooms_Y))) Neighbours++;
+	if (AllRoomsData.Find(GridLoc + (-GetActorForwardVector() * DistanceBetweenRooms_X + GetActorRightVector() * DistanceBetweenRooms_Y))) Neighbours++;
+	if (AllRoomsData.Find(GridLoc + (-GetActorForwardVector() * DistanceBetweenRooms_X + -GetActorRightVector() * DistanceBetweenRooms_Y))) Neighbours++;
 
 	return Neighbours >= 3;
 }
 
+void AMakeRooms::FinishRoomLayout()
+{
+	TArray<FVector> RoomLocations;
+	AllRoomsData.GenerateKeyArray(RoomLocations);
+
+	for (const FVector& CurrRoomLoc : RoomLocations)
+	{
+		FRoomStruct* FoundRoom = AllRoomsData.Find(CurrRoomLoc);
+		if (FoundRoom == nullptr) continue;
+
+		// Make sure the door is properly positioned
+		CheckNeighbours(CurrRoomLoc, true, FoundRoom);
+
+		if (bDrawDebugRoomLayout == true)
+		{
+			if (FoundRoom->DoorsType[0] != EDT_None) DrawDebugBox(GetWorld(), CurrRoomLoc + GetActorForwardVector() * 210.f, FVector(10.f, 10.f, 0.f), FColor::Emerald, true);
+			if (FoundRoom->DoorsType[1] != EDT_None) DrawDebugBox(GetWorld(), CurrRoomLoc + -GetActorForwardVector() * 210.f, FVector(10.f, 10.f, 0.f), FColor::Emerald, true);
+			if (FoundRoom->DoorsType[2] != EDT_None) DrawDebugBox(GetWorld(), CurrRoomLoc + GetActorRightVector() * 210.f, FVector(10.f, 10.f, 0.f), FColor::Emerald, true);
+			if (FoundRoom->DoorsType[3] != EDT_None) DrawDebugBox(GetWorld(), CurrRoomLoc + -GetActorRightVector() * 210.f, FVector(10.f, 10.f, 0.f), FColor::Emerald, true);
+		}
+
+		SetEndRooms(FoundRoom);
+	}
+}
 #pragma endregion
+
+#pragma region ///////////////// SPAWN ROOMS FROM LAYOUT //////////////////
 
 void AMakeRooms::SpawnRooms()
 {
 	TArray<FVector> RoomLocations;
 	AllRoomsData.GenerateKeyArray(RoomLocations);
-	FVector BossRoomLocation = FindFurthestRoom();
 
-	for (const FVector &CurrLoc : RoomLocations)
+	for (const FVector &CurrRoomLoc : RoomLocations)
 	{
-		FRoom* Grid = AllRoomsData.Find(CurrLoc);
-		if (Grid == nullptr) continue;
+		FRoomStruct* FoundRoom = AllRoomsData.Find(CurrRoomLoc);
+		if (FoundRoom == nullptr) continue;
 
-		// Make sure the door is properly positioned
-		CheckNeighbours(CurrLoc, true, Grid);
+		FTransform RoomTransfrom = FTransform(FRotator(0.f), CurrRoomLoc);
+		ARoom* SpawnedRoom = GetWorld()->SpawnActorDeferred<ARoom>(NormalRoomClass, RoomTransfrom);
+		if (SpawnedRoom == nullptr) continue;
+
+		SpawnedRoom->SetRoomData(*FoundRoom);
+		SpawnedRoom->FinishSpawning(RoomTransfrom);
+	}
+}
+
+void AMakeRooms::SetEndRooms(FRoomStruct* FoundRoom)
+{
+	if (FoundRoom->AmountOfDoors == 1 && FoundRoom->RoomType != ERT_Spawn)
+	{
+		FVector BossRoomLocation = FindFurthestRoom();
+
+		if (FoundRoom->Location == BossRoomLocation)
+		{
+			FoundRoom->RoomType = ERT_Boss;
+			for (int i = 0; i != 4; i++) if (FoundRoom->DoorsType[i] != EDT_None) FoundRoom->DoorsType[i] = EDT_Boss;
+		}
+		else
+		{
+			FoundRoom->RoomType = ERT_EndRoom;
+			EndRoomsLocations.Add(FoundRoom->Location);
+		}
 
 		if (bDrawDebugRoomLayout == true)
 		{
-			if (Grid->bDoorTop == true)	DrawDebugBox(GetWorld(), CurrLoc + GetActorForwardVector() * 210.f, FVector(10.f, 10.f, 0.f), FColor::Emerald, true);
-			if (Grid->bDoorBot == true) DrawDebugBox(GetWorld(), CurrLoc + -GetActorForwardVector() * 210.f, FVector(10.f, 10.f, 0.f), FColor::Emerald, true);
-			if (Grid->bDoorRight == true) DrawDebugBox(GetWorld(), CurrLoc + GetActorRightVector() * 210.f, FVector(10.f, 10.f, 0.f), FColor::Emerald, true);
-			if (Grid->bDoorLeft == true) DrawDebugBox(GetWorld(), CurrLoc + -GetActorRightVector() * 210.f, FVector(10.f, 10.f, 0.f), FColor::Emerald, true);
+			FColor NewColor = FoundRoom->RoomType == ERT_Boss ? FColor::Red : FColor::Emerald;
+			DrawDebugBox(GetWorld(), FoundRoom->Location + FVector(0, 0, 1.f), FVector(200.f, 200.f, 0.f), NewColor, true);
 		}
-
-		if (Grid->AmountOfDoors == 1 && Grid->RoomType != ERT_Spawn)
-		{
-			FColor NewColor = FColor::Emerald;
-			if (CurrLoc == BossRoomLocation)
-			{
-				NewColor = FColor::Red;
-				Grid->RoomType = ERT_Boss;
-			}
-			else
-			{
-				Grid->RoomType = ERT_EndRoom;
-				EndRoomsData.Add(CurrLoc, *Grid);
-			}
-			if (bDrawDebugRoomLayout == true) DrawDebugBox(GetWorld(), CurrLoc + FVector(0, 0, 1.f), FVector(200.f, 200.f, 0.f), NewColor, true);
-		}
-		
 	}
+}
+
+void AMakeRooms::SpawnAwardRoom()
+{
+	FRoomStruct* AwardRoom = PickRandomRoom(EndRoomsLocations);
+	if (AwardRoom == nullptr) return;
+
+	AwardRoom->RoomType = ERT_Award;
+	for (int i = 0; i != 4; i++) if (AwardRoom->DoorsType[i] == EDT_Room) AwardRoom->DoorsType[i] = EDT_Award;
+	if (bDrawDebugRoomLayout == true) DrawDebugBox(GetWorld(), AwardRoom->Location + FVector(0, 0, 2.f), FVector(200.f, 200.f, 0.f), FColor::Yellow, true);
 }
 
 FVector AMakeRooms::FindFurthestRoom()
 {
-	TArray<FRoom> RoomGrids;
+	TArray<FRoomStruct> RoomGrids;
 	AllRoomsData.GenerateValueArray(RoomGrids);
 	FVector RoomLocation;
 	int32 BiggestNumber = 0;
 
-	for (const FRoom& Room : RoomGrids)
+	for (const FRoomStruct& Room : RoomGrids)
 	{
 		if (Room.DistanceFromStartRoom < BiggestNumber) continue;
 		
@@ -185,22 +237,12 @@ FVector AMakeRooms::FindFurthestRoom()
 	return RoomLocation;
 }
 
-void AMakeRooms::SpawnAwardRoom()
+#pragma endregion
+
+FRoomStruct* AMakeRooms::PickRandomRoom(TArray<FVector> RoomsLocations)
 {
-	FRoom AwardRoom;
-	FVector AwardLoc = PickRandomRoomLocation(AwardRoom, EndRoomsData);
-	AwardRoom.RoomType = ERT_Award;
-	DrawDebugBox(GetWorld(), AwardLoc + FVector(0,0,2.f), FVector(200.f, 200.f, 0.f), FColor::Yellow, true);
-}
+	int32 RandRoom = UKismetMathLibrary::RandomIntegerInRangeFromStream(0, RoomsLocations.Num() - 1, SpawnRoomsSeed);
+	FRoomStruct* RandGrid = AllRoomsData.Find(RoomsLocations[RandRoom]);
 
-FVector AMakeRooms::PickRandomRoomLocation(FRoom& PickedGrid, const TMap<FVector, FRoom>& RoomsData)
-{
-	TArray<FVector> TempRoomsLocation;
-	RoomsData.GenerateKeyArray(TempRoomsLocation);
-
-	int32 RandRoom = UKismetMathLibrary::RandomIntegerInRangeFromStream(0, TempRoomsLocation.Num() - 1, SpawnRoomsSeed);
-	FRoom* RandGrid = AllRoomsData.Find(TempRoomsLocation[RandRoom]);
-
-	if (RandGrid != nullptr) PickedGrid = *RandGrid;
-	return TempRoomsLocation[RandRoom];
+	return RandGrid;
 }

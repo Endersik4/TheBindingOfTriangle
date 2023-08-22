@@ -23,6 +23,7 @@ void ADoor::BeginPlay()
 	Super::BeginPlay();
 	
 	TrianglePawn = Cast<ATrianglePawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	ChangeDoor();
 }
 
 // Called every frame
