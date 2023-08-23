@@ -9,54 +9,6 @@
 #include "TrianglePawn.generated.h"
 
 USTRUCT(BlueprintType)
-struct FBulletStruct {
-
-	GENERATED_USTRUCT_BODY();
-
-	// After Distance bullet will be destroyed
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		float Damage = 2.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		float Distance = 900.f;
-	// How fast bullet will go 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		float Speed = 1400.f;
-	// How many bullets will be spawned that is facing the same directions after given time (FrequencyTime)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		float FrequencyTime = 0.5f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		float Impulse = 200.f;
-	// Should use Way Curve when spawned
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		bool bUseWayCurve = false;
-	// Curve for relative additional movement to the bullet, for example: instead of going straight line bullet can waving 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings", meta = (EditCondition = "bUseWayCurve", EditConditionHides))
-		UCurveFloat* WayCurve = nullptr;
-	// Should Bullet back once the distance is reached and after this reach the distance again 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		bool bShouldBack = false;
-	// Longer button presses cause more bullet damage
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		bool bHoldBullet = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings", meta = (EditCondition = "bHoldBullet", EditConditionHides))
-		float HoldBulletTime = 3.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings", meta = (EditCondition = "bHoldBullet", EditConditionHides))
-		FLinearColor HoldBulletTriangleColor = FLinearColor::Yellow;
-	// How many bullets can be spawned at the same time
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once")
-		int32 Amount = 1;
-	// Angle between bullets when there is more then 1 bullet
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once", meta = (ClampMin = "0.0", ClampMax = "360.0", UIMin = "0.0", UIMax = "360.0"))
-		float DegreeBetween = 45.f;
-	// Radius of Circe that bullets will be spawned on the edges
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once")
-		float CirceRadius = 100.f;
-	// How much rotate circe around player 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once")
-		float CirceAngle = 0.f;
-};
-
-USTRUCT(BlueprintType)
 struct FHeartStruct {
 	GENERATED_USTRUCT_BODY();
 
@@ -125,18 +77,6 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 		void ChangeColorAfterHit(UMaterialInstanceDynamic* TriangleMaterial);
 
-	UFUNCTION(BlueprintCallable)
-		void DirectionForBullets();
-
-	UPROPERTY(EditAnywhere, Category = "Components")
-		class ACameraActor* TriangleCamera;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Settings")
-		bool bShouldDrawDebugBullets = false;
-
-	UFUNCTION(BlueprintCallable)
-		FBulletStruct GetBulletData() const { return Bullet; }
-
 	int32 GetCoinsAmount() const { return CoinsAmount; }
 	int32 GetBombsAmount() const { return BombsAmount; }
 	int32 GetKeysAmount() const { return KeysAmount; }
@@ -147,6 +87,13 @@ public:
 	bool AddHearts(int32 AmountToAdd, FString HeartName);
 
 	void ChangeCameraRoom(bool bChangeLoc, FVector CameraLocation);
+
+	class UStaticMeshComponent* GetTriangleMeshComp() const { return TriangleMeshComp; }
+
+	UPROPERTY(EditAnywhere, Category = "Components")
+		class ACameraActor* TriangleCamera;
+	UPROPERTY(Instanced, EditDefaultsOnly, BlueprintReadWrite, Category = "Components")
+		class UBulletComponent* BulletComponent;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
@@ -174,11 +121,6 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Movement Settings")
 		float CounterMovementForce = 3000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
-		TSubclassOf<class ABullet> BulletClass;
-	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
-		FBulletStruct Bullet;
-
 	// Movement
 	void MoveForward(float Axis);
 	void MoveRight(float Axis);
@@ -188,30 +130,12 @@ private:
 	bool CanShoot(float Axis);
 	void Shoot_Right(float Axis);
 	void Shoot_Forward(float Axis);
-	void Shoot();
 
 	// Damage
 	UMaterialInstanceDynamic* BaseTriangleDynamicMat;
 
-	// Bullet
-	void SpawnBullet(FVector StartLocation, FVector DirForBullet);
-
-	// Frequency Bullet
-	bool bCanSpawnAnotherBullet = true;
-	FTimerHandle SpawnAnotherBulletHandle;
-	void SetCanSpawnAnotherBullet() { bCanSpawnAnotherBullet = true; }
-
 	// Place Bomb
 	void PlaceBomb();
-	
-	// Hold Bullet
-	FTimerHandle HoldBulletHandle;
-	float DamageBeforeHoldBullet;
-	int32 HoldBulletDivideCounter = 1;
-	bool bShouldSkipHoldBullet = false;
-	bool HoldBullet();
-	void HoldBulletSetDamage();
-	void ClearHoldBullet();
 
 	// Add Item
 	bool AddAmount(int32& Value, int32 AmountToAdd);

@@ -15,6 +15,7 @@
 #include "TheBindingOfTriangle/Widgets/HUDWidget.h"
 #include "TheBindingOfTriangle/Interfaces/TakeItemInterface.h"
 #include "TheBindingOfTriangle/Items/ExplosiveBomb.h"
+#include "TheBindingOfTriangle/BulletClasses/BulletComponent.h"
 
 // Sets default values
 ATrianglePawn::ATrianglePawn()
@@ -32,20 +33,22 @@ ATrianglePawn::ATrianglePawn()
 	TriangleBoxComp->OnComponentBeginOverlap.AddDynamic(this, &ATrianglePawn::OnComponentBeginOverlap);
 	TriangleBoxComp->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
 
+	BulletComponent = CreateDefaultSubobject<UBulletComponent>(TEXT("Bullet Component"));
+
+
 }
 
 // Called when the game starts or when spawned
 void ATrianglePawn::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	DamageBeforeHoldBullet = Bullet.Damage;
 
 	SetTriangleCamera();
 	MakeHudWidget();
 
 	BaseTriangleDynamicMat = UMaterialInstanceDynamic::Create(TriangleMeshComp->GetMaterial(1), this);
 	TriangleMeshComp->SetMaterial(1, BaseTriangleDynamicMat);
+	BulletComponent->SetPlayerVariables(BaseTriangleDynamicMat);
 }
 
 // Called every frame
@@ -105,9 +108,9 @@ void ATrianglePawn::Shoot_Right(float Axis)
 
 	if (CanShoot(Axis) == false) return;
 
-	if (HoldBullet() == false) return;
+	if (BulletComponent->HoldBullet() == false) return;
 
-	Shoot();
+	BulletComponent->Shoot(TriangleMeshComp->GetRelativeRotation());
 }
 
 void ATrianglePawn::Shoot_Forward(float Axis)
@@ -117,32 +120,19 @@ void ATrianglePawn::Shoot_Forward(float Axis)
 
 	if (CanShoot(Axis) == false) return;
 
-	if (HoldBullet() == false) return;
+	if (BulletComponent->HoldBullet() == false) return;
 
-	Shoot();
-}
-
-void ATrianglePawn::Shoot()
-{
-	DirectionForBullets();
-	ClearHoldBullet();
-
-	// Wait FrequencyTime to fire another bullet
-	if (bCanSpawnAnotherBullet == true)
-	{
-		bCanSpawnAnotherBullet = false;
-		GetWorldTimerManager().SetTimer(SpawnAnotherBulletHandle, this, &ATrianglePawn::SetCanSpawnAnotherBullet, Bullet.FrequencyTime, false);
-	}
+	BulletComponent->Shoot(TriangleMeshComp->GetRelativeRotation());
 }
 
 bool ATrianglePawn::CanShoot(float Axis)
 {
 	if (Axis == 0.f)
 	{
-		if (Bullet.bHoldBullet == true && GetWorld()->GetTimerManager().IsTimerActive(HoldBulletHandle) == true 
+		if (BulletComponent->ShouldSkipHoldBullet() == true
 			&& GetInputAxisValue(FName(TEXT("Shoot_Forward"))) == 0.f && GetInputAxisValue(FName(TEXT("Shoot_Right"))) == 0.f)
 		{
-			bShouldSkipHoldBullet = true;
+			BulletComponent->SetShouldSkipHoldBullet(true);
 		}
 		else return false;
 	}
@@ -169,41 +159,6 @@ void ATrianglePawn::TakeDamage(float Damage, float Impulse, FVector ImpulseDir)
 	ChangeColorAfterHit(BaseTriangleDynamicMat);
 }
 
-#pragma endregion
-
-#pragma region ////////////////// BULLET ///////////////////
-void ATrianglePawn::DirectionForBullets()
-{
-	if (bCanSpawnAnotherBullet == false) return;
-	if (bShouldDrawDebugBullets == true) UKismetSystemLibrary::DrawDebugCircle(GetWorld(), GetActorLocation(), Bullet.CirceRadius, 34, FLinearColor::White, 999.f, 1.f, FVector(0.f, 1.f, 0.f), FVector(1.0f, 0.f, 0.f));
-
-	for (int i = 0; i != Bullet.Amount; i++)
-	{
-		// Calculate Start Location and bullet Direction
-		float angReg = FMath::DegreesToRadians(Bullet.DegreeBetween * i + Bullet.CirceAngle + TriangleMeshComp->GetRelativeRotation().Yaw);
-		FVector BulletLocation = FVector(FMath::Cos(angReg) * Bullet.CirceRadius, FMath::Sin(angReg) * Bullet.CirceRadius, 0) + GetActorLocation();
-		FVector BulletTrajectory = FVector(FMath::Cos(angReg), FMath::Sin(angReg), 0);
-		
-		if (bShouldDrawDebugBullets == true)
-		{
-			UKismetSystemLibrary::DrawDebugSphere(GetWorld(), BulletLocation, 5.f, 6, FLinearColor::Red, 999.f, 2.f);
-			UKismetSystemLibrary::DrawDebugLine(GetWorld(), BulletLocation, BulletLocation + BulletTrajectory * 100.f, FLinearColor::Red, 999.f, 1.f);
-		}
-
-		SpawnBullet(BulletLocation, BulletTrajectory);
-	}
-}
-
-void ATrianglePawn::SpawnBullet(FVector StartLocation, FVector DirForBullet)
-{
-	ABullet* BulletActor = GetWorld()->SpawnActor<ABullet>(BulletClass, StartLocation, GetActorRotation());
-	if (BulletActor == nullptr) return;
-
-	BulletActor->SetTrajectoryBullet(DirForBullet);
-	BulletActor->SetBulletData(Bullet);
-	BulletActor->SetOffsetTimeline();
-	BulletActor->SetBulletScale(HoldBulletDivideCounter);
-}
 #pragma endregion
 
 #pragma region ////////////////// WIDGETS //////////////////
@@ -236,43 +191,6 @@ void ATrianglePawn::PlaceBomb()
 	BombsAmount -= 1;
 	HudWidget->GetItemsAmount();
 }
-
-#pragma region ////////////////// HOLD BULLET //////////////////
-bool ATrianglePawn::HoldBullet()
-{
-	if (Bullet.bHoldBullet == true && bShouldSkipHoldBullet == false)
-	{
-		if (GetWorld()->GetTimerManager().IsTimerActive(HoldBulletHandle) == false)
-		{
-			GetWorld()->GetTimerManager().SetTimer(HoldBulletHandle, this, &ATrianglePawn::HoldBulletSetDamage, Bullet.HoldBulletTime * 1 / 10.f, true);
-		}
-		return false;
-	}
-	bShouldSkipHoldBullet = false;
-	return true;
-}
-
-void ATrianglePawn::HoldBulletSetDamage()
-{
-	if (HoldBulletDivideCounter > 10) return;
-	Bullet.Damage += DamageBeforeHoldBullet* 1/10.f;
-
-	FLinearColor NewColor = UKismetMathLibrary::LinearColorLerp(FLinearColor::Green, FLinearColor::Yellow, HoldBulletDivideCounter / 10.f);
-	BaseTriangleDynamicMat->SetVectorParameterValue(FName("Color"), NewColor);
-
-	HoldBulletDivideCounter++;
-}
-
-void ATrianglePawn::ClearHoldBullet()
-{
-	if (Bullet.bHoldBullet == false) return;
-
-	GetWorld()->GetTimerManager().ClearTimer(HoldBulletHandle);
-	Bullet.Damage = DamageBeforeHoldBullet;
-	HoldBulletDivideCounter = 1;
-	BaseTriangleDynamicMat->SetVectorParameterValue(FName("Color"), FLinearColor::Green);
-}
-#pragma endregion
 
 #pragma region /////////////////// ITEMS ///////////////////
 
@@ -345,6 +263,7 @@ void ATrianglePawn::ChangeCameraRoom(bool bChangeLoc, FVector CameraLocation)
 	CameraStartPosition = TriangleCamera->GetActorLocation();
 	CameraEndPosition = CameraLocation;
 }
+
 void ATrianglePawn::SmoothCameraLocation(float Delta)
 {
 	if (bChangeCameraLocation == false) return;

@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/TimelineComponent.h"
-#include "TheBindingOfTriangle/TrianglePawnClasses/TrianglePawn.h"
+#include "TheBindingOfTriangle/BulletClasses/BulletData.h"
 #include "Bullet.generated.h"
 
 UCLASS()
