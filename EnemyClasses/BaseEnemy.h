@@ -6,6 +6,34 @@
 #include "GameFramework/Pawn.h"
 #include "BaseEnemy.generated.h"
 
+UENUM(BlueprintType)
+enum EEnemyAction {
+	EA_WalkAimlessly,
+	EA_StandsStill,
+	EA_ChasesPlayer,
+	EA_ChargePlayer
+};
+
+UENUM(BlueprintType)
+enum EEnemyWalkingType {
+	EWT_Normal,
+	EWT_Jumping,
+	EWT_BouncesOfWalls
+};
+
+UENUM(BlueprintType)
+enum EEnemyDamageType {
+	EDT_Bullets,
+	EDT_ContactDamage,
+
+};
+
+UENUM(BlueprintType)
+enum EEnemyWhereShoot {
+	EWS_Ahead,
+	EWS_Player
+};
+
 UCLASS()
 class THEBINDINGOFTRIANGLE_API ABaseEnemy : public APawn
 {
@@ -36,5 +64,25 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UFloatingPawnMovement* FloatingMovement;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
+		float RangeToSpotThePlayer = 500.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
+		FVector RoomLocation;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
+		TEnumAsByte<EEnemyAction> EnemyActionWhenSpawned = EA_WalkAimlessly;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
+		TEnumAsByte<EEnemyAction> EnemyActionSpottedPlayer = EA_ChasesPlayer;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings", meta = (EditCondition = "EnemyActionWhenSpawned == EEnemyAction::EA_WalkAimlessly"))
+		TEnumAsByte<EEnemyWalkingType> EnemyWalkingType = EWT_Normal;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
+		TEnumAsByte<EEnemyDamageType> EnemyDamageType = EDT_ContactDamage;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings", meta = (EditCondition = "EnemyDamageType == EEnemyDamageType::EDT_Bullets"))
+		TEnumAsByte<EEnemyWhereShoot> EnemyShootDirection = EWS_Player;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
+		TArray<TSubclassOf<ABaseEnemy>> EnemiesToSpawnAfterDeath;
 
+	FTimerHandle SpawnEnemyHandle;
+	void SetUpEnemy();
+
+	class ABaseEnemyAIController* EnemyAIController;
 };

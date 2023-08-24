@@ -7,6 +7,7 @@
 #include "GameFramework/FloatingPawnMovement.h"
 
 #include "TheBindingOfTriangle/BulletClasses/BulletComponent.h"
+#include "BaseEnemyAIController.h"
 
 // Sets default values
 ABaseEnemy::ABaseEnemy()
@@ -26,13 +27,17 @@ ABaseEnemy::ABaseEnemy()
 
 	BulletComp = CreateDefaultSubobject<UBulletComponent>(TEXT("Bullet Component"));
 
+	
+
 }
 
 // Called when the game starts or when spawned
 void ABaseEnemy::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	EnemyAIController = Cast<ABaseEnemyAIController>(GetController());
+	GetWorld()->GetTimerManager().SetTimer(SpawnEnemyHandle, this, &ABaseEnemy::SetUpEnemy, 1.f, false);
 }
 
 // Called every frame
@@ -47,5 +52,10 @@ void ABaseEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void ABaseEnemy::SetUpEnemy()
+{
+	EnemyAIController->SetRoomLocation(RoomLocation);
 }
 

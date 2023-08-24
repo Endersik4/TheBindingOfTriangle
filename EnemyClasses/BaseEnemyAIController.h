@@ -14,21 +14,31 @@ class THEBINDINGOFTRIANGLE_API ABaseEnemyAIController : public AAIController
 {
 	GENERATED_BODY()
 
-
-protected:
-	virtual void BeginPlay() override;
 public:
 	ABaseEnemyAIController();
 
+protected:
+	virtual void BeginPlay() override;
+	
+public:
+	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
+		FVector RoomLocation;
+
+	void SetRoomLocation(FVector NewLoc);
 private:
+	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
 	UFUNCTION()
 		void HandleTargetPerceptionUpdated(AActor* Actor, struct FAIStimulus Stimulus);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
-		class UBehaviorTree* AIBehaviour;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UAIPerceptionComponent* EnemyPerception;
-	
+
+	FVector NextLocation;
+	void PickRandomLocationInRoom();
+	FTimerHandle MoveHandle;
+
+	//class UNavigationSystemV1* NavSys;
 };
