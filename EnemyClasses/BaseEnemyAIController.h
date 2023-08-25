@@ -22,23 +22,35 @@ protected:
 	
 public:
 	virtual void Tick(float DeltaTime) override;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
-		FVector RoomLocation;
-
-	void SetRoomLocation(FVector NewLoc);
+	
+	void SetUpEnemyAI(float MaxRadius);
 private:
-	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
-
 	UFUNCTION()
 		void HandleTargetPerceptionUpdated(AActor* Actor, struct FAIStimulus Stimulus);
+
+	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UAIPerceptionComponent* EnemyPerception;
 
-	FVector NextLocation;
-	void PickRandomLocationInRoom();
-	FTimerHandle MoveHandle;
+	// Charge
+	bool bIsCharging;
+	bool bCanChargePlayer = true;
+	FTimerHandle ChargePlayerHandle;
+	void SetCanChargePlayer() { bCanChargePlayer = true; }
+	void ChargeFinished();
+	void ChargeToPlayerLocation(FVector Location, AActor* Actor);
 
-	//class UNavigationSystemV1* NavSys;
+	// Chase The Player
+	void ChasingPlayer();
+
+	// Move enemy to random location (loop)
+	float MaxRandomLocationRadius;
+	FVector NextLocation;
+	FTimerHandle RandomLocationHandle;
+	void PickRandomLocationInRoom();
+
+	APawn* PlayerPawn;
+	class UNavigationSystemV1* NavSys;
+	class ABaseEnemy* EnemyPawn;
 };

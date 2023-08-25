@@ -7,6 +7,8 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "NavigationSystem.h"
 
+#include "BaseEnemy.h"
+
 ABaseEnemyAIController::ABaseEnemyAIController()
 {
 	EnemyPerception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIEnemyPerception"));
@@ -17,41 +19,91 @@ ABaseEnemyAIController::ABaseEnemyAIController()
 void ABaseEnemyAIController::BeginPlay()
 {
 	Super::BeginPlay();
-	GetPathFollowingComponent()->OnRequestFinished.AddUObject(this, &ABaseEnemyAIController::OnMoveCompleted);
 }
 
 void ABaseEnemyAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-}
-
-void ABaseEnemyAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
-{
-	UE_LOG(LogTemp, Warning, TEXT("COMPETED %s"), *Result.ToString());
-	
 }
 
 void ABaseEnemyAIController::HandleTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
+	if (EnemyPawn == nullptr || PlayerPawn == nullptr) return;
+
+	ChargeToPlayerLocation(Stimulus.StimulusLocation, Actor);
+
+	ChasingPlayer();
+
+	if (EnemyPawn->GetEnemyActionWhenSpawned() == ESA_StandsStill) SetFocus(Actor);
 }
+
+void ABaseEnemyAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
+{
+	if (EnemyPawn == nullptr) return;
+
+	ChargeFinished();
+}
+
+void ABaseEnemyAIController::ChasingPlayer()
+{
+	if (EnemyPawn->GetEnemyActionSpottedPlayer() != EA_ChasesPlayer || PlayerPawn == nullptr) return;
+
+	GetWorld()->GetTimerManager().ClearTimer(RandomLocationHandle);
+	MoveToActor(PlayerPawn, -1.f, false);
+}
+
+void ABaseEnemyAIController::ChargeToPlayerLocation(FVector Location, AActor* Actor)
+{
+	if (EnemyPawn->GetEnemyActionSpottedPlayer() != EA_ChargePlayer || bCanChargePlayer != true || Actor != PlayerPawn) return;
+
+	StopMovement();
+	GetWorld()->GetTimerManager().ClearTimer(RandomLocationHandle);
+
+	EnemyPawn->ChangeMovementSpeed(false);
+	MoveToLocation(Location, 10.f, false);
+	bCanChargePlayer = false;
+	bIsCharging = true;
+}
+
+
+void ABaseEnemyAIController::ChargeFinished()
+{
+	if (EnemyPawn->GetEnemyActionSpottedPlayer() != EA_ChargePlayer || bIsCharging != true) return;
+
+	EnemyPawn->ChangeMovementSpeed(true);
+	bIsCharging = false;
+	GetWorld()->GetTimerManager().SetTimer(ChargePlayerHandle, this, &ABaseEnemyAIController::SetCanChargePlayer, 0.3f, false);
+
+	GetWorld()->GetTimerManager().SetTimer(RandomLocationHandle, this, &ABaseEnemyAIController::PickRandomLocationInRoom, FMath::FRandRange(1.f, 3.f), true, 0.f);
+}
+
 
 void ABaseEnemyAIController::PickRandomLocationInRoom()
 {
-	
 	FNavLocation RandLoc;
-	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
-	if (NavSys->GetRandomReachablePointInRadius(RoomLocation, 1500.f, RandLoc) == false) return;
+	if (NavSys->GetRandomReachablePointInRadius(EnemyPawn->GetActorLocation(), MaxRandomLocationRadius, RandLoc) == false) return;
+
 	FVector RandLocation = RandLoc.Location;
 	RandLocation.Z = GetPawn()->GetActorLocation().Z;
 	MoveToLocation(RandLocation, 100.f, false);
 }
 
-void ABaseEnemyAIController::SetRoomLocation(FVector NewLoc)
+void ABaseEnemyAIController::SetUpEnemyAI(float MaxRadius)
 {
-	RoomLocation = NewLoc;
-	//NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
-	PickRandomLocationInRoom();
-	GetWorld()->GetTimerManager().SetTimer(MoveHandle, this, &ABaseEnemyAIController::PickRandomLocationInRoom, 1.f, true);
+	MaxRandomLocationRadius = MaxRadius;
+	NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+	EnemyPawn = Cast<ABaseEnemy>(GetPawn());
+	PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+
+	if (EnemyPawn == nullptr) return;
+
+	if (EnemyPawn->GetEnemyActionWhenSpawned() == ESA_WalkAimlessly)
+	{
+		GetWorld()->GetTimerManager().SetTimer(RandomLocationHandle, this, &ABaseEnemyAIController::PickRandomLocationInRoom, FMath::FRandRange(1.f, 3.f), true, 0.f);
+	}
+	else if (EnemyPawn->GetEnemyActionWhenSpawned() == ESA_StandsStill)
+	{
+		if (EnemyPawn->GetShouldFocusOnPlayer()) SetFocus(PlayerPawn);
+	}
 }
 

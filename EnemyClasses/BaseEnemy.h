@@ -7,25 +7,23 @@
 #include "BaseEnemy.generated.h"
 
 UENUM(BlueprintType)
-enum EEnemyAction {
-	EA_WalkAimlessly,
-	EA_StandsStill,
-	EA_ChasesPlayer,
-	EA_ChargePlayer
+enum EEnemySpawnAction {
+	ESA_WalkAimlessly,
+	ESA_StandsStill,
+	ESA_BouncesOfWalls
 };
 
 UENUM(BlueprintType)
-enum EEnemyWalkingType {
-	EWT_Normal,
-	EWT_Jumping,
-	EWT_BouncesOfWalls
+enum EEnemyAction {
+	EA_ChasesPlayer,
+	EA_ChargePlayer,
+	EA_None
 };
 
 UENUM(BlueprintType)
 enum EEnemyDamageType {
 	EDT_Bullets,
 	EDT_ContactDamage,
-
 };
 
 UENUM(BlueprintType)
@@ -56,6 +54,11 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		class UBulletComponent* BulletComp;
+
+	EEnemyAction GetEnemyActionSpottedPlayer() const { return EnemyActionSpottedPlayer; }
+	EEnemySpawnAction GetEnemyActionWhenSpawned() const { return EnemyActionWhenSpawned; }
+	bool GetShouldFocusOnPlayer() const { return bShouldFocusOnPlayer; }
+	void ChangeMovementSpeed(bool bChangeToOriginal);
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UBoxComponent* CollisionBoxComp;
@@ -64,22 +67,39 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UFloatingPawnMovement* FloatingMovement;
 
+
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
-		float RangeToSpotThePlayer = 500.f;
+		float MaxRandomLocationRadius = 2500.f;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
-		FVector RoomLocation;
-	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
-		TEnumAsByte<EEnemyAction> EnemyActionWhenSpawned = EA_WalkAimlessly;
+		TEnumAsByte<EEnemySpawnAction> EnemyActionWhenSpawned = ESA_WalkAimlessly;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings", meta = (EditCondition = "EnemyActionWhenSpawned == EEnemySpawnAction::ESA_BouncesOfWalls"))
+		float TimeToReachWall = 2.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings", meta = (EditCondition = "EnemyActionWhenSpawned == EEnemySpawnAction::ESA_StandsStill"))
+		bool bShouldFocusOnPlayer;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
 		TEnumAsByte<EEnemyAction> EnemyActionSpottedPlayer = EA_ChasesPlayer;
-	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings", meta = (EditCondition = "EnemyActionWhenSpawned == EEnemyAction::EA_WalkAimlessly"))
-		TEnumAsByte<EEnemyWalkingType> EnemyWalkingType = EWT_Normal;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings", meta = (EditCondition = "EnemyActionWhenSpawned == EEnemyAction::EA_ChargePlayer"))
+		float SpeedWhenSeePlayer = 1500.f;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
 		TEnumAsByte<EEnemyDamageType> EnemyDamageType = EDT_ContactDamage;
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings", meta = (EditCondition = "EnemyDamageType == EEnemyDamageType::EDT_Bullets"))
 		TEnumAsByte<EEnemyWhereShoot> EnemyShootDirection = EWS_Player;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
 		TArray<TSubclassOf<ABaseEnemy>> EnemiesToSpawnAfterDeath;
+
+	float OriginalMovementSpeed;
+
+	// Bouncing
+	bool bCanGoToLocation;
+	float TimeBounceElapsed;
+	FVector OriginalLocation;
+	FVector StartingBounceLocation;
+	FVector BounceLocation;
+	void BounceOfWalls();
 
 	FTimerHandle SpawnEnemyHandle;
 	void SetUpEnemy();

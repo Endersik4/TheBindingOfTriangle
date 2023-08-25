@@ -17,13 +17,12 @@ APickableItem::APickableItem()
 	ItemBoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("Item Box Component"));
 	RootComponent = ItemBoxComp;
 	ItemBoxComp->SetSimulatePhysics(true);
-	ItemBoxComp->SetCollisionProfileName(FName(TEXT("PhysicsActor")));
-	ItemBoxComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECollisionResponse::ECR_Ignore);
+	ItemBoxComp->SetCollisionProfileName(FName(TEXT("ItemBox")));
 	ItemBoxComp->GetBodyInstance()->bLockXRotation = true;
 	ItemBoxComp->GetBodyInstance()->bLockYRotation = true;
 	ItemBoxComp->GetBodyInstance()->bLockZRotation = true;
 	ItemBoxComp->GetBodyInstance()->bLockZTranslation = true;
-	ItemBoxComp->SetLinearDamping(2.f);
+	ItemBoxComp->SetLinearDamping(6.f);
 
 	ItemBoxComp->SetBoxExtent(FVector(32.f, 32.f, 100.f));
 
