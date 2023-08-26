@@ -23,7 +23,6 @@ ABaseEnemy::ABaseEnemy()
 	CollisionBoxComp->SetLinearDamping(8.f);
 	CollisionBoxComp->GetBodyInstance()->bLockXRotation = true;
 	CollisionBoxComp->GetBodyInstance()->bLockYRotation = true;
-	
 	//CollisionBoxComp->SetSimulatePhysics(true);
 
 	FloatingMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("Floating Pawn Movement"));
@@ -83,26 +82,28 @@ void ABaseEnemy::ChangeMovementSpeed(bool bChangeToOriginal)
 void ABaseEnemy::BounceOfWalls()
 {
 	FHitResult Hit;
-	if (GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation(), GetActorLocation() + GetActorForwardVector() * 2000.f, ECC_WorldDynamic) == false) return;
-	DrawDebugSphere(GetWorld(), Hit.Location, 100.f, 24, FColor::Red, true);
-
 	TArray<AActor*> ActorToIgnore;
-	UKismetSystemLibrary::LineTraceSingle(GetWorld(), GetActorLocation(), GetActorLocation() + GetActorForwardVector() * 2000.f, ETraceTypeQuery::TraceTypeQuery1, false, ActorToIgnore, 
-		EDrawDebugTrace::None)
-
+	if (UKismetSystemLibrary::LineTraceSingle(GetWorld(), GetActorLocation() + GetActorForwardVector() * 100.f, GetActorLocation() + GetActorForwardVector() * 3000.f, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4), false, ActorToIgnore,
+		EDrawDebugTrace::Persistent, Hit, true) == false) return;
 	OriginalLocation = GetActorLocation();
 	StartingBounceLocation = Hit.Location;
-	bCanGoToLocation = true;
 	TimeBounceElapsed = 0.f;
 
-	BounceLocation = FMath::GetReflectionVector(GetActorForwardVector(), Hit.Normal);
-	if (GetWorld()->LineTraceSingleByChannel(Hit, Hit.Location, Hit.Location + BounceLocation * 2000.f, ECC_WorldDynamic) == false) return;
+	BounceLocation = FMath::GetReflectionVector(GetActorForwardVector(), Hit.ImpactNormal);
+	if (UKismetSystemLibrary::LineTraceSingle(GetWorld(), Hit.Location + BounceLocation * 100.f, Hit.Location + BounceLocation * 3000.f, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4), false, ActorToIgnore,
+		EDrawDebugTrace::Persistent, Hit, true) == false) return;
 	BounceLocation = Hit.Location;
+
+	bCanGoToLocation = true;
 }
 
 void ABaseEnemy::SetUpEnemy()
 {
-	if (EnemyActionWhenSpawned == ESA_BouncesOfWalls) BounceOfWalls();
+	if (EnemyActionWhenSpawned == ESA_BouncesOfWalls)
+	{
+		CollisionBoxComp->SetSimulatePhysics(false);
+		BounceOfWalls();
+	}
 	EnemyAIController->SetUpEnemyAI(MaxRandomLocationRadius);
 }
 
