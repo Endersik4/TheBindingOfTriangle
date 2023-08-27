@@ -76,6 +76,8 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 		void ChangeColorAfterHit(UMaterialInstanceDynamic* TriangleMaterial);
+	UFUNCTION(BlueprintCallable)
+		void SetCanGetHit(bool bCan) { bCanGetHit = bCan; }
 
 	int32 GetCoinsAmount() const { return CoinsAmount; }
 	int32 GetBombsAmount() const { return BombsAmount; }
@@ -92,7 +94,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Components")
 		class ACameraActor* TriangleCamera;
-	UPROPERTY(Instanced, EditDefaultsOnly, BlueprintReadWrite, Category = "Components")
+	UPROPERTY(Instanced, EditAnywhere, BlueprintReadWrite, Category = "Components")
 		class UBulletComponent* BulletComponent;
 
 private:
@@ -132,6 +134,7 @@ private:
 	void Shoot_Forward(float Axis);
 
 	// Damage
+	bool bCanGetHit = true;
 	UMaterialInstanceDynamic* BaseTriangleDynamicMat;
 
 	// Place Bomb

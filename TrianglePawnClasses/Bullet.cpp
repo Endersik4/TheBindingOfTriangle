@@ -39,10 +39,9 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 	ITakeDamageInterface* TakeDamageInter = Cast<ITakeDamageInterface>(Hit.GetActor());
 	if (TakeDamageInter)
 	{
-		TakeDamageInter->TakeDamage(BulletData.Damage, 0.f, FVector(0.f));
+		TakeDamageInter->TakeDamage(BulletData.Damage, BulletData.Impulse, TrajectoryBullet);
 	}
-
-	if (Hit.GetComponent()->IsSimulatingPhysics() == true)
+	else if (Hit.GetComponent()->IsSimulatingPhysics() == true)
 	{
 		FVector ImpulseForce = TrajectoryBullet * BulletData.Impulse;
 		Hit.GetComponent()->AddImpulse(ImpulseForce, NAME_None, true);

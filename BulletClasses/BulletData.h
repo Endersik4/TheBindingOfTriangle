@@ -22,7 +22,7 @@ struct FBulletStruct {
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		float FrequencyTime = 0.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
-		float Impulse = 200.f;
+		float Impulse = 1300.f;
 	// Should use Way Curve when spawned
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		bool bUseWayCurve = false;

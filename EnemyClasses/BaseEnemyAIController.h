@@ -23,7 +23,7 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 	
-	void SetUpEnemyAI(float MaxRadius);
+	void SetUpEnemyAI(float MaxRadius, enum EEnemyDamageType, enum EEnemyWhereShoot);
 private:
 	UFUNCTION()
 		void HandleTargetPerceptionUpdated(AActor* Actor, struct FAIStimulus Stimulus);
@@ -32,6 +32,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UAIPerceptionComponent* EnemyPerception;
+
+	// Bullets
+	bool bShouldStartShooting;
 
 	// Charge
 	bool bIsCharging;
@@ -43,6 +46,10 @@ private:
 
 	// Chase The Player
 	void ChasingPlayer();
+
+	// Move the enemy only horizontally and vertically
+	FTimerHandle MoveHorizontallyHandle;
+	void MoveEnemyHorizontallyVertically();
 
 	// Move enemy to random location (loop)
 	float MaxRandomLocationRadius;

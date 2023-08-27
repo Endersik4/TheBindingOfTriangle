@@ -146,7 +146,8 @@ bool ATrianglePawn::CanShoot(float Axis)
 
 void ATrianglePawn::TakeDamage(float Damage, float Impulse, FVector ImpulseDir)
 {
-	///CurrentHealth -= FMath::TruncToInt(Damage);
+	if (bCanGetHit == false) return;
+
 	CurrentHearts.Last().Amount -= FMath::TruncToInt(Damage);
 	if (CurrentHearts.Last().Amount <= 0)
 	{
@@ -155,7 +156,10 @@ void ATrianglePawn::TakeDamage(float Damage, float Impulse, FVector ImpulseDir)
 	}
 	CurrentHearts.Sort();
 	RestartHudWidgetVariables();
+
+	TriangleBoxComp->AddImpulse(ImpulseDir * Impulse, NAME_None, true);
 	
+	bCanGetHit = false;
 	ChangeColorAfterHit(BaseTriangleDynamicMat);
 }
 
