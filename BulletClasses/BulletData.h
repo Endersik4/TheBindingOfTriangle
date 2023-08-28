@@ -23,6 +23,14 @@ struct FBulletStruct {
 		float FrequencyTime = 0.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		float Impulse = 1300.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Bomb")
+		bool bBombBullet = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Bomb", meta = (EditCondition = "bBombBullet", EditConditionHides))
+		float ExplodeRadius = 200.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Bomb", meta = (EditCondition = "bBombBullet", EditConditionHides))
+		UParticleSystem* ExplosionParticle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Bomb", meta = (EditCondition = "bBombBullet", EditConditionHides))
+		float ExplosionParticleScale = 1.f;
 	// Should use Way Curve when spawned
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		bool bUseWayCurve = false;

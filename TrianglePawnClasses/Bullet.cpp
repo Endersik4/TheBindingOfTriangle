@@ -3,6 +3,8 @@
 
 #include "TheBindingOfTriangle/TrianglePawnClasses/Bullet.h"
 #include "Components/StaticMeshComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "TheBindingOfTriangle/Interfaces/TakeDamageInterface.h"
 
@@ -36,7 +38,13 @@ void ABullet::Tick(float DeltaTime)
 
 void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	ITakeDamageInterface* TakeDamageInter = Cast<ITakeDamageInterface>(Hit.GetActor());
+	if (BulletData.bBombBullet == true) {
+		HitAsBombBullet();
+		Destroy();
+		return;
+	}
+
+	ITakeDamageInterface* TakeDamageInter = Cast<ITakeDamageInterface>(OtherActor);
 	if (TakeDamageInter)
 	{
 		TakeDamageInter->TakeDamage(BulletData.Damage, BulletData.Impulse, TrajectoryBullet);
@@ -48,6 +56,33 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 	}
 
 	Destroy();
+}
+
+void ABullet::HitAsBombBullet()
+{
+	FTransform NewTransform = FTransform(FRotator(0.f), GetActorLocation(), FVector(BulletData.ExplosionParticleScale));
+	if (BulletData.ExplosionParticle) UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BulletData.ExplosionParticle, NewTransform);
+
+	TArray<FHitResult> HitsResultArray;
+	FCollisionShape SphereCol = FCollisionShape::MakeSphere(BulletData.ExplodeRadius);
+	if (GetWorld()->SweepMultiByChannel(HitsResultArray, GetActorLocation(), GetActorLocation(), FQuat::Identity, ECC_Visibility, SphereCol) == false) return;
+
+	for (FHitResult Hit : HitsResultArray)
+	{
+		if (Hit.GetActor() == nullptr) continue;
+
+		ITakeDamageInterface* TakeDamageInterface = Cast<ITakeDamageInterface>(Hit.GetActor());
+		if (TakeDamageInterface)
+		{
+			FVector Dir = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), Hit.GetActor()->GetActorLocation()).Vector();
+			TakeDamageInterface->TakeDamage(BulletData.Damage, BulletData.Impulse * 10.f, Dir);
+		}
+		else if (Hit.GetComponent()->IsSimulatingPhysics() == true)
+		{
+			Hit.GetComponent()->AddRadialImpulse(GetActorLocation(), BulletData.ExplodeRadius, BulletData.Impulse * 10.f, ERadialImpulseFalloff::RIF_Constant, true);
+		}
+
+	}
 }
 
 #pragma region //////////////// OFFSET TIMELINE ////////////////////

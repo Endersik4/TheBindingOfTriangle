@@ -4,6 +4,7 @@
 #include "TheBindingOfTriangle/Items/ExplosiveBomb.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/PhysicsVolume.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
 #include "TheBindingOfTriangle/Interfaces/TakeDamageInterface.h"
@@ -97,12 +98,13 @@ void AExplosiveBomb::ExplodeObjectsInRange()
 		ITakeDamageInterface* TakeDamageInterface = Cast<ITakeDamageInterface>(Hit.GetActor());
 		if (TakeDamageInterface)
 		{
-			TakeDamageInterface->TakeDamage(Damage, 0.f, FVector(0.f));
+			FVector Dir = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), Hit.GetActor()->GetActorLocation()).Vector();
+			TakeDamageInterface->TakeDamage(Damage, ExplodeImpulse * 10.f, Dir);
 		}
-
-		if (Hit.GetComponent()->IsSimulatingPhysics() == true)
+		else if (Hit.GetComponent()->IsSimulatingPhysics() == true)
 		{
 			Hit.GetComponent()->AddRadialImpulse(GetActorLocation(), ExplodeDistance, ExplodeImpulse * 10.f, ERadialImpulseFalloff::RIF_Constant, true);
 		}
+		
 	}
 }

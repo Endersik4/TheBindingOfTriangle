@@ -59,6 +59,9 @@ public:
 	// Take Damage Interface
 	virtual void TakeDamage(float Damage, float Impulse, FVector ImpulseDir) override;
 
+	UFUNCTION(BlueprintImplementableEvent)
+		void ChangeColorAfterHit(UMaterialInstanceDynamic* TriangleMaterial);
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		class UBulletComponent* BulletComp;
 
@@ -84,6 +87,8 @@ private:
 		float Health = 20.f;
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
 		float MaxRandomLocationRadius = 2500.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
+		TSubclassOf<class AGeometryCollectionActor> EnemyMeshFracture;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
 		TEnumAsByte<EEnemySpawnAction> EnemyActionWhenSpawned = ESA_WalkAimlessly;
@@ -112,7 +117,8 @@ private:
 	bool bStartShooting;
 
 	// Damage
-	void ContactDamage(AActor* ActorToHit);
+	void ContactDamage(AActor* ActorToHit, const FHitResult& SweepResult);
+	UMaterialInstanceDynamic* BaseEnemyDynamicMat;
 
 	// Bouncing
 	bool bCanGoToLocation;
@@ -120,6 +126,9 @@ private:
 	FVector BounceLocation;
 	void InterpToBounceOfWallsLocation(float DeltaTime);
 	void CalculateLocationToBounceOfWalls();
+
+	// Spawn Enemies After Death
+	void SpawnEnemiesAfterDeath();
 
 	FTimerHandle SpawnEnemyHandle;
 	void SetUpEnemy();

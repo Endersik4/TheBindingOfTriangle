@@ -44,6 +44,9 @@ private:
 	FBulletStruct BulletData;
 	FVector BulletScale;
 
+	// Bomb 
+	void HitAsBombBullet();
+
 	// Offset Timeline
 	float CurveOffset;
 	FTimeline CurveTimeline;

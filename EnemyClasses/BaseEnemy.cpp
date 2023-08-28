@@ -7,6 +7,8 @@
 #include "GameFramework/FloatingPawnMovement.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "GeometryCollection/GeometryCollectionActor.h"
+#include "GeometryCollection/GeometryCollectionComponent.h"
 
 #include "TheBindingOfTriangle/BulletClasses/BulletComponent.h"
 #include "BaseEnemyAIController.h"
@@ -41,7 +43,12 @@ void ABaseEnemy::BeginPlay()
 	Super::BeginPlay();
 
 	CollisionBoxComp->OnComponentBeginOverlap.AddDynamic(this, &ABaseEnemy::OnComponentBeginOverlap);
+
+	BaseEnemyDynamicMat = UMaterialInstanceDynamic::Create(EnemyMeshComp->GetMaterial(1), this);
+	EnemyMeshComp->SetMaterial(1, BaseEnemyDynamicMat);
+
 	EnemyAIController = Cast<ABaseEnemyAIController>(GetController());
+
 	OriginalMovementSpeed = FloatingMovement->GetMaxSpeed();
 	GetWorld()->GetTimerManager().SetTimer(SpawnEnemyHandle, this, &ABaseEnemy::SetUpEnemy, 1.f, false);
 }
@@ -67,17 +74,46 @@ void ABaseEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 void ABaseEnemy::TakeDamage(float Damage, float Impulse, FVector ImpulseDir)
 {
 	Health -= Damage;
-	CollisionBoxComp->AddImpulse(Impulse * ImpulseDir, NAME_None, true);
 
-	if (Health <= 0.f) Destroy();
+	if (Health <= 0.f)
+	{
+		FVector Loc = EnemyMeshComp->GetComponentLocation();
+		AGeometryCollectionActor* SpawnedFractureMesh = GetWorld()->SpawnActor<AGeometryCollectionActor>(EnemyMeshFracture, Loc, GetActorRotation());
+		if (SpawnedFractureMesh != nullptr)
+		{
+			SpawnedFractureMesh->GetGeometryCollectionComponent()->ApplyExternalStrain(0, Loc, 100.f, 1.f, 1.f, 5500.f);
+			SpawnedFractureMesh->GetGeometryCollectionComponent()->ApplyBreakingLinearVelocity(0, Loc);
+			FVector ImpulseForce = (Impulse / 2) * (ImpulseDir - FVector(0.f, 0.f, 1.f));
+			SpawnedFractureMesh->GetGeometryCollectionComponent()->AddImpulse(ImpulseForce, NAME_None, true);
+		}
+
+		SpawnEnemiesAfterDeath();
+
+		Destroy();
+		return;
+	}
+	CollisionBoxComp->AddImpulse(Impulse * ImpulseDir, NAME_None, true);
+	ChangeColorAfterHit(BaseEnemyDynamicMat);
+}
+
+void ABaseEnemy::SpawnEnemiesAfterDeath()
+{
+	for (TSubclassOf<ABaseEnemy> EnemyToSpawn : EnemiesToSpawnAfterDeath)
+	{
+		float X = FMath::FRandRange(-150.f, 150.f);
+		float Y = FMath::FRandRange(-150.f, 150.f);
+		FVector SpawnLoc = GetActorLocation() + FVector(X, Y, 0.f);
+		float Yaw = FMath::FRandRange(-180.f, 180.f);
+		GetWorld()->SpawnActor<ABaseEnemy>(EnemyToSpawn, SpawnLoc, FRotator(0.f, Yaw, 0.f));
+	}
 }
 
 void ABaseEnemy::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (EnemyDamageType == EDT_ContactDamage) ContactDamage(OtherActor);
+	if (EnemyDamageType == EDT_ContactDamage) ContactDamage(OtherActor, SweepResult);
 }
 
-void ABaseEnemy::ContactDamage(AActor* ActorToHit)
+void ABaseEnemy::ContactDamage(AActor* ActorToHit, const FHitResult& SweepResult)
 {
 	ITakeDamageInterface* DamageInterface = Cast<ITakeDamageInterface>(ActorToHit);
 	if (DamageInterface == nullptr) return;
@@ -111,6 +147,7 @@ void ABaseEnemy::CalculateLocationToBounceOfWalls()
 	BounceLocation = Hit.Location;
 	bCanGoToLocation = true;
 }
+
 
 void ABaseEnemy::InterpToBounceOfWallsLocation(float DeltaTime)
 {
