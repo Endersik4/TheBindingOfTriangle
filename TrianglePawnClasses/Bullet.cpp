@@ -38,7 +38,7 @@ void ABullet::Tick(float DeltaTime)
 
 void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (BulletData.bBombBullet == true) {
+	if (BulletData.TypeOfBullet == ETB_Bomb) {
 		HitAsBombBullet();
 		Destroy();
 		return;

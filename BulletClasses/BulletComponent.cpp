@@ -6,6 +6,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/StaticMeshComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 #include "TheBindingOfTriangle/TrianglePawnClasses/Bullet.h"
 #include "TheBindingOfTriangle/TrianglePawnClasses/TrianglePawn.h"
@@ -36,11 +38,30 @@ void UBulletComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// ...
+	if (bShootLaser == true)
+	{
+		DirectionForBullets(PawnRotation);
+		LaserTimeElapsed += DeltaTime;
+		if (LaserTimeElapsed > Bullet.LaserTime)
+		{
+			RestartLaser();
+		}
+	}
 }
 
 void UBulletComponent::Shoot(FRotator MeshRelativeRotation)
 {
+	if (bShootLaser == true)
+	{
+		RestartLaser();
+	}
+
+	if (Bullet.bShootHoldBulletAfterTime == true && HoldBulletDivideCounter < 8 && GetWorld()->GetTimerManager().IsTimerActive(HoldBulletHandle) == true)
+	{
+		ClearHoldBullet();
+		return;
+	}
+	
 	DirectionForBullets(MeshRelativeRotation);
 	ClearHoldBullet();
 
@@ -70,7 +91,20 @@ void UBulletComponent::DirectionForBullets(FRotator MeshRelativeRotation)
 			UKismetSystemLibrary::DrawDebugLine(GetWorld(), BulletLocation, BulletLocation + BulletTrajectory * 100.f, FLinearColor::Red, 999.f, 1.f);
 		}
 
-		SpawnBullet(BulletLocation, BulletTrajectory);
+		if (Bullet.TypeOfBullet == ETB_Laser)
+		{
+			PawnRotation = MeshRelativeRotation;
+			LaserBullet(BulletLocation, BulletTrajectory);
+			if (bShootLaser == false)
+			{
+				bShootLaser = true;
+				if (Bullet.LaserNiagaraParticle)
+				{
+					SpawnedLaserParticle = UNiagaraFunctionLibrary::SpawnSystemAttached(Bullet.LaserNiagaraParticle, GetOwner()->GetRootComponent(), FName(""), FVector(0.f), FRotator(-90.f, MeshRelativeRotation.Yaw, 0.f), EAttachLocation::KeepRelativeOffset, true);
+				}
+			}
+		}	
+		else SpawnBullet(BulletLocation, BulletTrajectory);
 	}
 }
 
@@ -85,6 +119,30 @@ void UBulletComponent::SpawnBullet(FVector StartLocation, FVector DirForBullet)
 	BulletActor->SetBulletScale(HoldBulletDivideCounter);
 }
 
+void UBulletComponent::LaserBullet(FVector StartLocation, FVector DirForLaser)
+{
+	TArray<AActor*> ActorsToIgnore;
+	TArray<FHitResult> Hits;
+	DrawDebugLine(GetWorld(), StartLocation, StartLocation + DirForLaser * Bullet.Distance, FColor::Green, false, 0.f, (uint8)0U, 5.f);
+	if (UKismetSystemLibrary::LineTraceMulti(GetWorld(), StartLocation, StartLocation + DirForLaser * Bullet.Distance, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel1),
+		false, ActorsToIgnore, EDrawDebugTrace::None, Hits, true) == false) return;	
+
+	for (FHitResult& Hit : Hits)
+	{
+		ITakeDamageInterface* DamageInterface = Cast<ITakeDamageInterface>(Hit.GetActor());
+		if (DamageInterface == nullptr)  continue;
+
+		DamageInterface->TakeDamage(Bullet.Damage, Bullet.Impulse, DirForLaser);
+	} 
+}
+
+void UBulletComponent::RestartLaser()
+{
+	LaserTimeElapsed = 0.f;
+	bShootLaser = false;
+	if (SpawnedLaserParticle) SpawnedLaserParticle->DestroyComponent();
+}
+
 bool UBulletComponent::HoldBullet()
 {
 	if (Bullet.bHoldBullet == true && bShouldSkipHoldBullet == false)
@@ -95,6 +153,7 @@ bool UBulletComponent::HoldBullet()
 		}
 		return false;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("HOL"));
 	bShouldSkipHoldBullet = false;
 	return true;
 }
@@ -114,11 +173,12 @@ void UBulletComponent::SetPlayerVariables(UMaterialInstanceDynamic* DynamicMat)
 void UBulletComponent::HoldBulletSetDamage()
 {
 	if (HoldBulletDivideCounter > 10) return;
+	UE_LOG(LogTemp, Warning, TEXT("COUNTER %d"), HoldBulletDivideCounter);
 	Bullet.Damage += DamageBeforeHoldBullet * 1 / 10.f;
 
 	if (BaseTriangleDynamicMat)
 	{
-		FLinearColor NewColor = UKismetMathLibrary::LinearColorLerp(FLinearColor::Green, FLinearColor::Yellow, HoldBulletDivideCounter / 10.f);
+		FLinearColor NewColor = UKismetMathLibrary::LinearColorLerp(FLinearColor::Green, Bullet.HoldBulletTriangleColor, HoldBulletDivideCounter / 10.f);
 		BaseTriangleDynamicMat->SetVectorParameterValue(FName("Color"), NewColor);
 	}
 

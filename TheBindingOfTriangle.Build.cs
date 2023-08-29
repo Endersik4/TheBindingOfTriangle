@@ -8,7 +8,7 @@ public class TheBindingOfTriangle : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AIModule" , "NavigationSystem" , "GeometryCollectionEngine" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AIModule" , "NavigationSystem" , "GeometryCollectionEngine", "Niagara"});
    
         PrivateDependencyModuleNames.AddRange(new string[] {  });
 

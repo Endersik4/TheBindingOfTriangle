@@ -107,6 +107,7 @@ void ATrianglePawn::Shoot_Right(float Axis)
 	else if (Axis < -0.5f)  TriangleMeshComp->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
 
 	if (CanShoot(Axis) == false) return;
+	BulletComponent->RestartLaser();
 
 	if (BulletComponent->HoldBullet() == false) return;
 
@@ -117,8 +118,9 @@ void ATrianglePawn::Shoot_Forward(float Axis)
 {
 	if (Axis > 0.5f) TriangleMeshComp->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
 	else if (Axis < -0.5f) TriangleMeshComp->SetRelativeRotation(FRotator(0.f, -180.f, 0.f));
-
+	
 	if (CanShoot(Axis) == false) return;
+	BulletComponent->RestartLaser();
 
 	if (BulletComponent->HoldBullet() == false) return;
 

@@ -42,6 +42,7 @@ public:
 	void SetShouldSkipHoldBullet(bool bShould) { bShouldSkipHoldBullet = bShould; }
 
 	void SetPlayerVariables(UMaterialInstanceDynamic* DynamicMat);
+	void RestartLaser();
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
@@ -50,6 +51,13 @@ private:
 		FBulletStruct Bullet;
 
 	void SpawnBullet(FVector StartLocation, FVector DirForBullet);
+
+	// Laser
+	bool bShootLaser;
+	float LaserTimeElapsed;
+	FRotator PawnRotation;
+	void LaserBullet(FVector StartLocation, FVector DirForLaser);
+	class UNiagaraComponent* SpawnedLaserParticle;
 
 	// Hold Bullet
 	FTimerHandle HoldBulletHandle;

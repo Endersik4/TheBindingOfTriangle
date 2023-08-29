@@ -5,6 +5,13 @@
 #include "CoreMinimal.h"
 #include "BulletData.generated.h"
 
+UENUM(BlueprintType)
+enum ETypeOfBullet {
+	ETB_Bullet,
+	ETB_Bomb,
+	ETB_Laser
+};
+
 USTRUCT(BlueprintType)
 struct FBulletStruct {
 
@@ -23,14 +30,20 @@ struct FBulletStruct {
 		float FrequencyTime = 0.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		float Impulse = 1300.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Bomb")
-		bool bBombBullet = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Bomb", meta = (EditCondition = "bBombBullet", EditConditionHides))
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
+		TEnumAsByte<ETypeOfBullet> TypeOfBullet = ETypeOfBullet::ETB_Bullet;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Laser", meta = (EditCondition = "TypeOfBullet ==  ETypeOfBullet::ETB_Laser", EditConditionHides))
+		float LaserTime = 0.5f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Laser", meta = (EditCondition = "TypeOfBullet ==  ETypeOfBullet::ETB_Laser", EditConditionHides))
+		class UNiagaraSystem* LaserNiagaraParticle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Bomb", meta = (EditCondition = "TypeOfBullet ==  ETypeOfBullet::ETB_Bomb", EditConditionHides))
 		float ExplodeRadius = 200.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Bomb", meta = (EditCondition = "bBombBullet", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Bomb", meta = (EditCondition = "TypeOfBullet ==  ETypeOfBullet::ETB_Bomb", EditConditionHides))
 		UParticleSystem* ExplosionParticle;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Bomb", meta = (EditCondition = "bBombBullet", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Bomb", meta = (EditCondition = "TypeOfBullet ==  ETypeOfBullet::ETB_Bomb", EditConditionHides))
 		float ExplosionParticleScale = 1.f;
+
 	// Should use Way Curve when spawned
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		bool bUseWayCurve = false;
@@ -40,13 +53,17 @@ struct FBulletStruct {
 	// Should Bullet back once the distance is reached and after this reach the distance again 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		bool bShouldBack = false;
+
 	// Longer button presses cause more bullet damage
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		bool bHoldBullet = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings", meta = (EditCondition = "bHoldBullet", EditConditionHides))
+		bool bShootHoldBulletAfterTime = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings", meta = (EditCondition = "bHoldBullet", EditConditionHides))
 		float HoldBulletTime = 3.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings", meta = (EditCondition = "bHoldBullet", EditConditionHides))
 		FLinearColor HoldBulletTriangleColor = FLinearColor::Yellow;
+
 	// How many bullets can be spawned at the same time
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once")
 		int32 Amount = 1;
