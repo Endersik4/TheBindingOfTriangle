@@ -241,7 +241,7 @@ bool ATrianglePawn::AddHearts(int32 AmountToAdd, FString HeartName)
 		
 		if (CurrentHearts[i].bEmptyTextureAfterDelete == true)
 		{
-			if (CurrentHearts[i].MaxAmount - AmountToAdd < CurrentHearts[i].Amount) return false;
+			if (CurrentHearts[i].MaxAmount - (AmountToAdd - 1) < CurrentHearts[i].Amount) return false;
 		}
 
 		CurrentHearts[i].Amount += AmountToAdd;

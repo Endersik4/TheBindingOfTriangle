@@ -48,6 +48,7 @@ void ABaseEnemy::BeginPlay()
 	EnemyMeshComp->SetMaterial(1, BaseEnemyDynamicMat);
 
 	EnemyAIController = Cast<ABaseEnemyAIController>(GetController());
+	BulletComp->SetEnemyOwner(this);
 
 	OriginalMovementSpeed = FloatingMovement->GetMaxSpeed();
 	GetWorld()->GetTimerManager().SetTimer(SpawnEnemyHandle, this, &ABaseEnemy::SetUpEnemy, 1.f, false);
@@ -122,6 +123,11 @@ void ABaseEnemy::ContactDamage(AActor* ActorToHit, const FHitResult& SweepResult
 	DamageInterface->TakeDamage(BulletComp->GetBulletData().Damage, BulletComp->GetBulletData().Impulse, Dir);
 }
 #pragma endregion
+
+void ABaseEnemy::StopEnemyMovement(float Time)
+{
+	EnemyAIController->StopMovementForTime(Time);
+}
 
 void ABaseEnemy::ChangeMovementSpeed(bool bChangeToOriginal)
 {

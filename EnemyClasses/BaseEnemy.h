@@ -74,6 +74,7 @@ public:
 
 	void SetStartShooting(bool bNewStartShooting) { bStartShooting = bNewStartShooting; }
 
+	void StopEnemyMovement(float Time);
 	void ChangeMovementSpeed(bool bChangeToOriginal);
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")

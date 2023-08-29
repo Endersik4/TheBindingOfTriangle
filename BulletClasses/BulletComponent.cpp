@@ -11,6 +11,7 @@
 
 #include "TheBindingOfTriangle/TrianglePawnClasses/Bullet.h"
 #include "TheBindingOfTriangle/TrianglePawnClasses/TrianglePawn.h"
+#include "TheBindingOfTriangle/EnemyClasses/BaseEnemy.h"
 
 // Sets default values for this component's properties
 UBulletComponent::UBulletComponent()
@@ -51,6 +52,8 @@ void UBulletComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UBulletComponent::Shoot(FRotator MeshRelativeRotation)
 {
+	if (bCanSpawnAnotherBullet == false) return;
+
 	if (bShootLaser == true)
 	{
 		RestartLaser();
@@ -75,7 +78,6 @@ void UBulletComponent::Shoot(FRotator MeshRelativeRotation)
 
 void UBulletComponent::DirectionForBullets(FRotator MeshRelativeRotation)
 {
-	if (bCanSpawnAnotherBullet == false) return;
 	if (bShouldDrawDebugBullets == true) UKismetSystemLibrary::DrawDebugCircle(GetWorld(), GetOwner()->GetActorLocation(), Bullet.CirceRadius, 34, FLinearColor::White, 999.f, 1.f, FVector(0.f, 1.f, 0.f), FVector(1.0f, 0.f, 0.f));
 
 	for (int i = 0; i != Bullet.Amount; i++)
@@ -97,11 +99,13 @@ void UBulletComponent::DirectionForBullets(FRotator MeshRelativeRotation)
 			LaserBullet(BulletLocation, BulletTrajectory);
 			if (bShootLaser == false)
 			{
-				bShootLaser = true;
+				if (EnemyOwner) EnemyOwner->StopEnemyMovement(Bullet.LaserTime);
 				if (Bullet.LaserNiagaraParticle)
 				{
 					SpawnedLaserParticle = UNiagaraFunctionLibrary::SpawnSystemAttached(Bullet.LaserNiagaraParticle, GetOwner()->GetRootComponent(), FName(""), FVector(0.f), FRotator(-90.f, MeshRelativeRotation.Yaw, 0.f), EAttachLocation::KeepRelativeOffset, true);
+					SpawnedLaserParticle->SetWorldRotation(FRotator(-90.f, MeshRelativeRotation.Yaw, 0.f));
 				}
+				bShootLaser = true;
 			}
 		}	
 		else SpawnBullet(BulletLocation, BulletTrajectory);

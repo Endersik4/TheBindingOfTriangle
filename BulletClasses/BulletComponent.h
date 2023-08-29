@@ -36,12 +36,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 		FBulletStruct GetBulletData() const { return Bullet; }
 
+	UFUNCTION(BlueprintCallable)
+		int32 GetHoldBulletDivideCounter() const { return HoldBulletDivideCounter; }
+
 	void Shoot(FRotator MeshRelativeRotation);
 	bool HoldBullet();
 	bool ShouldSkipHoldBullet();
 	void SetShouldSkipHoldBullet(bool bShould) { bShouldSkipHoldBullet = bShould; }
 
 	void SetPlayerVariables(UMaterialInstanceDynamic* DynamicMat);
+	void SetEnemyOwner(class ABaseEnemy* NewOwner) { EnemyOwner = NewOwner; }
 	void RestartLaser();
 
 private:
@@ -66,6 +70,9 @@ private:
 	bool bShouldSkipHoldBullet = false;
 	void HoldBulletSetDamage();
 	void ClearHoldBullet();
+
+	// Enemy
+	class ABaseEnemy* EnemyOwner;
 
 	// Frequency Bullet
 	bool bCanSpawnAnotherBullet = true;

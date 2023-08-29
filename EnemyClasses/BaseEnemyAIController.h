@@ -24,6 +24,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	
 	void SetUpEnemyAI(float MaxRadius, enum EEnemyDamageType, enum EEnemyWhereShoot);
+	void StopMovementForTime(float Time);
 private:
 	UFUNCTION()
 		void HandleTargetPerceptionUpdated(AActor* Actor, struct FAIStimulus Stimulus);
@@ -44,6 +45,11 @@ private:
 	void ChargeFinished();
 	void ChargeToPlayerLocation(FVector Location, AActor* Actor);
 
+	// Stop Movement
+	bool bStopMovement;
+	FTimerHandle ResumeMovementHandle;
+	void StartSpecificMovement();
+	
 	// Chase The Player
 	void ChasingPlayer();
 

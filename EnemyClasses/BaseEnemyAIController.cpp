@@ -54,6 +54,33 @@ void ABaseEnemyAIController::ChasingPlayer()
 	MoveToActor(PlayerPawn, -1.f, false);
 }
 
+void ABaseEnemyAIController::StopMovementForTime(float Time)
+{
+	UE_LOG(LogTemp, Error, TEXT("STOP MOVEMNT"));
+	bStopMovement = true;
+	StopMovement();
+	StopMovement();
+	GetWorldTimerManager().SetTimer(ResumeMovementHandle, this, &ABaseEnemyAIController::StartSpecificMovement, Time, false);
+}
+
+void ABaseEnemyAIController::StartSpecificMovement()
+{
+	bStopMovement = false;
+	UE_LOG(LogTemp, Warning, TEXT("START MVOEMNT"));
+	if (EnemyPawn->GetEnemyActionWhenSpawned() == ESA_WalkAimlessly)
+	{
+		GetWorld()->GetTimerManager().SetTimer(RandomLocationHandle, this, &ABaseEnemyAIController::PickRandomLocationInRoom, FMath::FRandRange(1.f, 3.f), true, 0.f);
+	}
+	else if (EnemyPawn->GetEnemyActionWhenSpawned() == ESA_StandsStill)
+	{
+		if (EnemyPawn->GetShouldFocusOnPlayer()) SetFocus(PlayerPawn);
+	}
+	else if (EnemyPawn->GetEnemyActionWhenSpawned() == ESA_WalkHorizontallyVertically)
+	{
+		GetWorld()->GetTimerManager().SetTimer(MoveHorizontallyHandle, this, &ABaseEnemyAIController::MoveEnemyHorizontallyVertically, FMath::FRandRange(2.f, 6.f), true, 0.1f);
+	}
+}
+
 #pragma region /////////////// CHARGE TO PLAYER /////////////////////
 void ABaseEnemyAIController::ChargeToPlayerLocation(FVector Location, AActor* Actor)
 {
@@ -83,6 +110,8 @@ void ABaseEnemyAIController::ChargeFinished()
 
 void ABaseEnemyAIController::PickRandomLocationInRoom()
 {
+	if (bStopMovement == true) return;
+
 	FNavLocation RandLoc;
 	if (NavSys->GetRandomReachablePointInRadius(EnemyPawn->GetActorLocation(), MaxRandomLocationRadius, RandLoc) == false) return;
 
@@ -93,6 +122,8 @@ void ABaseEnemyAIController::PickRandomLocationInRoom()
 
 void ABaseEnemyAIController::MoveEnemyHorizontallyVertically()
 {
+	if (bStopMovement == true) return;
+
 	int32 DirChoice = FMath::RandRange(1,4);
 	FVector Dir;
 	switch (DirChoice)
@@ -117,18 +148,7 @@ void ABaseEnemyAIController::SetUpEnemyAI(float MaxRadius, EEnemyDamageType Enem
 
 	if (EnemyPawn == nullptr) return;
 
-	if (EnemyPawn->GetEnemyActionWhenSpawned() == ESA_WalkAimlessly)
-	{
-		GetWorld()->GetTimerManager().SetTimer(RandomLocationHandle, this, &ABaseEnemyAIController::PickRandomLocationInRoom, FMath::FRandRange(1.f, 3.f), true, 0.f);
-	}
-	else if (EnemyPawn->GetEnemyActionWhenSpawned() == ESA_StandsStill)
-	{
-		if (EnemyPawn->GetShouldFocusOnPlayer()) SetFocus(PlayerPawn);
-	}
-	else if (EnemyPawn->GetEnemyActionWhenSpawned() == ESA_WalkHorizontallyVertically)
-	{
-		GetWorld()->GetTimerManager().SetTimer(MoveHorizontallyHandle, this, &ABaseEnemyAIController::MoveEnemyHorizontallyVertically, FMath::FRandRange(2.f, 6.f), true, 0.1f);
-	}
+	StartSpecificMovement();
 
 	if (EnemyDamageType == EDT_Bullets && EnemyWhereToShoot == EWS_Player) bShouldStartShooting = true;
 	else if (EnemyDamageType == EDT_Bullets && EnemyWhereToShoot == EWS_Ahead) EnemyPawn->SetStartShooting(true);
