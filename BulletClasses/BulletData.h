@@ -30,6 +30,8 @@ struct FBulletStruct {
 		float FrequencyTime = 0.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		float Impulse = 1300.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
+		TSubclassOf<class ABullet> BulletClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		TEnumAsByte<ETypeOfBullet> TypeOfBullet = ETypeOfBullet::ETB_Bullet;
@@ -76,6 +78,53 @@ struct FBulletStruct {
 	// How much rotate circe around player 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings|Many Bullet At Once")
 		float CirceAngle = 0.f;
+
+	FBulletStruct operator*(const FBulletStruct& BulletDataToAdd) {
+		FBulletStruct NewBulletData = *this;
+		NewBulletData.Damage = Damage * BulletDataToAdd.Damage;
+		NewBulletData.Distance = Distance * BulletDataToAdd.Distance;
+		NewBulletData.Speed = Speed * BulletDataToAdd.Speed;
+		NewBulletData.FrequencyTime = FrequencyTime * BulletDataToAdd.FrequencyTime;
+		NewBulletData.Impulse = Impulse * BulletDataToAdd.Impulse;
+
+		NewBulletData.LaserTime = LaserTime * BulletDataToAdd.LaserTime;
+
+		NewBulletData.ExplodeRadius = ExplodeRadius * BulletDataToAdd.ExplodeRadius;
+		NewBulletData.ExplosionParticleScale = ExplosionParticleScale * BulletDataToAdd.ExplosionParticleScale;
+
+		NewBulletData.HoldBulletTime = HoldBulletTime * BulletDataToAdd.HoldBulletTime;
+
+		NewBulletData.Amount = Amount * BulletDataToAdd.Amount;
+		NewBulletData.DegreeBetween = DegreeBetween * BulletDataToAdd.DegreeBetween;
+		NewBulletData.CirceRadius = CirceRadius * BulletDataToAdd.CirceRadius;
+		NewBulletData.CirceAngle = CirceAngle * BulletDataToAdd.CirceAngle;
+
+		return NewBulletData;
+	}
+
+	FBulletStruct operator/(const FBulletStruct& BulletDataToDivide) {
+		FBulletStruct NewBulletData = *this;
+		NewBulletData.Damage = Damage / BulletDataToDivide.Damage;
+		NewBulletData.Distance = Distance / BulletDataToDivide.Distance;
+		NewBulletData.Speed = Speed / BulletDataToDivide.Speed;
+		NewBulletData.FrequencyTime = FrequencyTime / BulletDataToDivide.FrequencyTime;
+		NewBulletData.Impulse = Impulse / BulletDataToDivide.Impulse;
+
+		NewBulletData.LaserTime = LaserTime / BulletDataToDivide.LaserTime;
+
+		NewBulletData.ExplodeRadius = ExplodeRadius / BulletDataToDivide.ExplodeRadius;
+		NewBulletData.ExplosionParticleScale = ExplosionParticleScale / BulletDataToDivide.ExplosionParticleScale;
+
+		NewBulletData.HoldBulletTime = HoldBulletTime / BulletDataToDivide.HoldBulletTime;
+
+		NewBulletData.Amount = Amount / BulletDataToDivide.Amount;
+		NewBulletData.DegreeBetween = DegreeBetween / BulletDataToDivide.DegreeBetween;
+		NewBulletData.CirceRadius = CirceRadius / BulletDataToDivide.CirceRadius;
+		NewBulletData.CirceAngle = CirceAngle / BulletDataToDivide.CirceAngle;
+
+		return NewBulletData;
+	}
+
 };
 
 /**

@@ -34,7 +34,7 @@ public:
 		void DirectionForBullets(FRotator MeshRelativeRotation);
 
 	UFUNCTION(BlueprintCallable)
-		FBulletStruct GetBulletData() const { return Bullet; }
+		FBulletStruct& GetBulletData() { return Bullet; }
 
 	UFUNCTION(BlueprintCallable)
 		int32 GetHoldBulletDivideCounter() const { return HoldBulletDivideCounter; }
@@ -49,8 +49,6 @@ public:
 	void RestartLaser();
 
 private:
-	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
-		TSubclassOf<class ABullet> BulletClass;
 	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
 		FBulletStruct Bullet;
 

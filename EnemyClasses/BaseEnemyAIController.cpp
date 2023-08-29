@@ -56,9 +56,7 @@ void ABaseEnemyAIController::ChasingPlayer()
 
 void ABaseEnemyAIController::StopMovementForTime(float Time)
 {
-	UE_LOG(LogTemp, Error, TEXT("STOP MOVEMNT"));
 	bStopMovement = true;
-	StopMovement();
 	StopMovement();
 	GetWorldTimerManager().SetTimer(ResumeMovementHandle, this, &ABaseEnemyAIController::StartSpecificMovement, Time, false);
 }
@@ -66,7 +64,7 @@ void ABaseEnemyAIController::StopMovementForTime(float Time)
 void ABaseEnemyAIController::StartSpecificMovement()
 {
 	bStopMovement = false;
-	UE_LOG(LogTemp, Warning, TEXT("START MVOEMNT"));
+
 	if (EnemyPawn->GetEnemyActionWhenSpawned() == ESA_WalkAimlessly)
 	{
 		GetWorld()->GetTimerManager().SetTimer(RandomLocationHandle, this, &ABaseEnemyAIController::PickRandomLocationInRoom, FMath::FRandRange(1.f, 3.f), true, 0.f);

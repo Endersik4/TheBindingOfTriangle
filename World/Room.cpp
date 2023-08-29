@@ -36,7 +36,7 @@ ARoom::ARoom()
 	ActivateRoomBoxComp->SetupAttachment(RootComponent);
 	ActivateRoomBoxComp->SetCollisionProfileName(FName(TEXT("Custom...")));
 	ActivateRoomBoxComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	ActivateRoomBoxComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECR_Overlap);
+	ActivateRoomBoxComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Overlap);
 
 	CameraLocationBoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("Camera Location Box Component"));
 	CameraLocationBoxComp->SetupAttachment(RootComponent);

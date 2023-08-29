@@ -114,7 +114,7 @@ void UBulletComponent::DirectionForBullets(FRotator MeshRelativeRotation)
 
 void UBulletComponent::SpawnBullet(FVector StartLocation, FVector DirForBullet)
 {
-	ABullet* BulletActor = GetWorld()->SpawnActor<ABullet>(BulletClass, StartLocation, GetOwner()->GetActorRotation());
+	ABullet* BulletActor = GetWorld()->SpawnActor<ABullet>(Bullet.BulletClass, StartLocation, GetOwner()->GetActorRotation());
 	if (BulletActor == nullptr) return;
 
 	BulletActor->SetTrajectoryBullet(DirForBullet);
@@ -157,7 +157,6 @@ bool UBulletComponent::HoldBullet()
 		}
 		return false;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("HOL"));
 	bShouldSkipHoldBullet = false;
 	return true;
 }

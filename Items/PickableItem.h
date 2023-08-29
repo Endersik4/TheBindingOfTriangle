@@ -13,7 +13,8 @@ enum TypeOfItem
 	ECoin,
 	EBomb,
 	EKey,
-	EHeart
+	EHeart,
+	ENone
 };
 
 UCLASS()
