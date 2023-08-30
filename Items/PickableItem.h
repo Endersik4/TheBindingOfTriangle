@@ -56,5 +56,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Item Settings", meta = (EditCondition = "ItemType == TypeOfItem::ECoin", EditConditionHides))
 		TArray<int32> RandomCoinRange = { 1, 6 };
 
+	UPROPERTY(EditAnywhere, Category = "Item Settings")
+		float TimeEffect = 0.2f;
 private:
+
+	// Change mesh scale from 0.f to original scale in Time (TimeEffect)
+	bool bShouldChangeMeshScale = true;
+	float OriginalScale;
+	float TimeElapsed;
+	void ChangeMeshScale(float Delta);
 };

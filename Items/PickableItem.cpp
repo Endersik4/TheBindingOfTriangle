@@ -29,6 +29,8 @@ APickableItem::APickableItem()
 	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Item Mesh"));
 	ItemMesh->SetupAttachment(ItemBoxComp);
 	ItemMesh->SetCollisionProfileName(FName(TEXT("ItemPreset")));
+
+	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 }
 
 void APickableItem::TakeItem(ATrianglePawn* TrianglePawn)
@@ -62,6 +64,8 @@ void APickableItem::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	OriginalScale = ItemMesh->GetRelativeScale3D().X;
+	ItemMesh->SetRelativeScale3D(FVector(0.01f));
 	if (ItemType == EHeart)
 	{
 		if (ItemAmount == 2) ItemMesh->SetMaterial(1, ItemMesh->GetMaterial(0));
@@ -73,5 +77,21 @@ void APickableItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (bShouldChangeMeshScale == true) ChangeMeshScale(DeltaTime);
+}
+
+void APickableItem::ChangeMeshScale(float Delta)
+{
+	if (TimeElapsed <= TimeEffect)
+	{
+		float NewScale = FMath::Lerp(0.01f, OriginalScale, TimeElapsed / TimeEffect);
+		ItemMesh->SetRelativeScale3D(FVector(NewScale));
+		TimeElapsed += Delta;
+	}
+	else
+	{
+		ItemMesh->SetRelativeScale3D(FVector(OriginalScale));
+		bShouldChangeMeshScale = false;
+	}
 }
 
