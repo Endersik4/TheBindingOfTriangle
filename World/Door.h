@@ -48,6 +48,8 @@ private:
 		UMaterialInstance* DoorBossMaterial;
 	UPROPERTY(EditDefaultsOnly, Category = "Door settings|Door Type")
 		UMaterialInstance* DoorAwardMaterial;
+	UPROPERTY(EditDefaultsOnly, Category = "Door settings|Door Type")
+		UMaterialInstance* DoorShopMaterial;
 	UPROPERTY(EditDefaultsOnly, Category = "Door settings|Door Status")
 		UStaticMesh* DoorOpenMesh;
 	UPROPERTY(EditDefaultsOnly, Category = "Door settings|Door Status")

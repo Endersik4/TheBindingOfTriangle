@@ -47,13 +47,13 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Chest Settings")
 		UAnimationAsset* ChestOpenAnim;
 	UPROPERTY(EditDefaultsOnly, Category = "Chest Settings")
-		float TimeEffect = 0.2f;
+		float PopUpTime = 0.2f;
 
 	// Change mesh scale from 0.f to original scale in Time (TimeEffect)
-	bool bShouldChangeMeshScale = true;
+	bool bShouldMeshPopUp = true;
 	float OriginalScale;
-	float TimeElapsed;
-	void ChangeMeshScale(float Delta);
+	float PopUpTimeElapsed;
+	void PopUpMesh(float Delta);
 
 	bool bIsOpen;
 	UMaterialInstanceDynamic* LockChestMaterial;

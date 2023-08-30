@@ -21,7 +21,10 @@ void AGenerateLevel::BeginPlay()
 
 	bDrawDebugRoomLayout = false;
 	GenerateRoomsLayout();
-	SpawnAwardRoom();
+
+	SpawnSpecificRoom(ERoomType::ERT_Award, EDoorType::EDT_Award);
+	SpawnSpecificRoom(ERoomType::ERT_Shop, EDoorType::EDT_Shop);
+
 	SpawnRooms();
 }
 
@@ -77,7 +80,11 @@ void AGenerateLevel::GenerateRoomsLayout()
 	}
 
 	FinishRoomLayout();
-	if (bDrawDebugRoomLayout) SpawnAwardRoom();
+	if (bDrawDebugRoomLayout)
+	{
+		SpawnSpecificRoom(ERoomType::ERT_Award, EDoorType::EDT_Award);
+		SpawnSpecificRoom(ERoomType::ERT_Shop, EDoorType::EDT_Shop);
+	}
 }
 
 bool AGenerateLevel::CanRoomBeAtGivenLoc(FVector& RoomLocation, int32& Index, int32& StartRoomDistance, int32& SpawnRoomCounter)
@@ -219,6 +226,7 @@ void AGenerateLevel::SpawnRooms()
 		TSubclassOf<ARoom> RoomClass = NormalRoomClass;
 		if (FoundRoom->RoomType == ERT_Boss) RoomClass = BossRoomClass;
 		else if (FoundRoom->RoomType == ERT_Award) RoomClass = AwardRoomClass;
+		else if (FoundRoom->RoomType == ERT_Shop) RoomClass = ShopRoomClass;
 
 		FTransform RoomTransfrom = FTransform(FRotator(0.f), CurrRoomLoc);
 		ARoom* SpawnedRoom = GetWorld()->SpawnActorDeferred<ARoom>(RoomClass, RoomTransfrom);
@@ -229,16 +237,17 @@ void AGenerateLevel::SpawnRooms()
 	}
 }
 
-void AGenerateLevel::SpawnAwardRoom()
+void AGenerateLevel::SpawnSpecificRoom(ERoomType RoomTypeToChoose, EDoorType DoorTypeToChoose, FColor DebugColor)
 {
-	FRoomStruct* AwardRoom = PickRandomRoom(EndRoomsLocations);
-	if (AwardRoom == nullptr) return;
+	FRoomStruct* SpecificRoom = PickRandomRoom(EndRoomsLocations);
+	if (SpecificRoom == nullptr) return;
 
-	AwardRoom->RoomType = ERT_Award;
-	for (int i = 0; i != 4; i++) if (AwardRoom->DoorsType[i] == EDT_Room) AwardRoom->DoorsType[i] = EDT_Award;
-	CheckNeighbours(AwardRoom->Location, false, AwardRoom, true);
+	SpecificRoom->RoomType = RoomTypeToChoose;
+	EndRoomsLocations.Remove(SpecificRoom->Location);
+	for (int i = 0; i != 4; i++) if (SpecificRoom->DoorsType[i] == EDT_Room)SpecificRoom->DoorsType[i] = DoorTypeToChoose;
+	CheckNeighbours(SpecificRoom->Location, false, SpecificRoom, true);
 
-	if (bDrawDebugRoomLayout == true) DrawDebugBox(GetWorld(), AwardRoom->Location + FVector(0, 0, 2.f), FVector(200.f, 200.f, 0.f), FColor::Yellow, true);
+	if (bDrawDebugRoomLayout == true) DrawDebugBox(GetWorld(), SpecificRoom->Location + FVector(0, 0, 2.f), FVector(200.f, 200.f, 0.f), DebugColor, true);
 }
 
 FVector AGenerateLevel::FindFurthestRoom()

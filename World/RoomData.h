@@ -18,6 +18,7 @@ enum EDoorType {
 	EDT_Room,
 	EDT_Boss,
 	EDT_Award,
+	EDT_Shop,
 	EDT_None
 };
 
@@ -26,6 +27,7 @@ enum ERoomType {
 	ERT_Normal,
 	ERT_Award,
 	ERT_Boss,
+	ERT_Shop,
 	ERT_EndRoom,
 	ERT_Spawn
 };

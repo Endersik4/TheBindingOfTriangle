@@ -46,7 +46,7 @@ void AChestWithItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bShouldChangeMeshScale == true) ChangeMeshScale(DeltaTime);
+	if (bShouldMeshPopUp == true) PopUpMesh(DeltaTime);
 }
 
 #pragma region /////////////////// OPEN CHEST WHEN PLAYER IS COLLIDING WITH BOX //////////////////
@@ -86,18 +86,18 @@ void AChestWithItem::SpawnRandomItem()
 }
 #pragma endregion
 
-void AChestWithItem::ChangeMeshScale(float Delta)
+void AChestWithItem::PopUpMesh(float Delta)
 {
-	if (TimeElapsed <= TimeEffect)
+	if (PopUpTimeElapsed <= PopUpTime)
 	{
-		float NewScale = FMath::Lerp(0.01f, OriginalScale, TimeElapsed / TimeEffect);
+		float NewScale = FMath::Lerp(0.01f, OriginalScale, PopUpTimeElapsed / PopUpTime);
 		SetActorScale3D(FVector(NewScale));
-		TimeElapsed += Delta;
+		PopUpTimeElapsed += Delta;
 	}
 	else
 	{
 		SetActorScale3D(FVector(OriginalScale));
-		bShouldChangeMeshScale = false;
+		bShouldMeshPopUp = false;
 	}
-}\
+}
 

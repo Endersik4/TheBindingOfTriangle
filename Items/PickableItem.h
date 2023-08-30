@@ -37,6 +37,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	void SetCanPlayerBuyItem(bool bCan) { bCanPlayerBuyItem = bCan; }
+	void ChangeIsSimulatingPhysics(bool bIs);
+	int32 GetPriceForItem() const { return PriceForItem; }
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
@@ -57,12 +60,17 @@ protected:
 		TArray<int32> RandomCoinRange = { 1, 6 };
 
 	UPROPERTY(EditAnywhere, Category = "Item Settings")
-		float TimeEffect = 0.2f;
+		float PopUpTime = 0.2f;
+
+	UPROPERTY(EditAnywhere, Category = "Item Settings")
+		bool bCanPlayerBuyItem = false;
+	UPROPERTY(EditAnywhere, Category = "Item Settings")
+		int32 PriceForItem = 0;
 private:
 
 	// Change mesh scale from 0.f to original scale in Time (TimeEffect)
-	bool bShouldChangeMeshScale = true;
+	bool bShouldMeshPopUp = true;
 	float OriginalScale;
-	float TimeElapsed;
-	void ChangeMeshScale(float Delta);
+	float PopUpTimeElapsed;
+	void PopUpMesh(float Delta);
 };

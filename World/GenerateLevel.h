@@ -44,6 +44,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
 		TSubclassOf<class ARoom> BossRoomClass;
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
+		TSubclassOf<class ARoom> ShopRoomClass;
+	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
 		FRandomStream SpawnRoomsSeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Room Spawner settings", meta = (AllowPrivateAccess = "true"))
 		bool bDrawDebugRoomLayout = false;
@@ -59,7 +61,7 @@ private:
 	void FinishRoomLayout();
 	void SpawnRooms();
 	void SetEndRooms(FRoomStruct* FoundRoom);
-	void SpawnAwardRoom();
+	void SpawnSpecificRoom(ERoomType RoomTypeToChoose, EDoorType DoorTypeToChoose, FColor DebugColor = FColor::Yellow);
 	FVector FindFurthestRoom();
 
 	FRoomStruct* PickRandomRoom(TArray<FVector> RoomsLocations);

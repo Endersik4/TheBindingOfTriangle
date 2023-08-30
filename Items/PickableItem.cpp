@@ -35,6 +35,12 @@ APickableItem::APickableItem()
 
 void APickableItem::TakeItem(ATrianglePawn* TrianglePawn)
 {
+	if (bCanPlayerBuyItem == true)
+	{
+		int32 NewCoinsAmount = TrianglePawn->GetCoinsAmount() - PriceForItem;
+		if (NewCoinsAmount < 0) return;
+	}
+
 	bool bWasItemAdded = false;
 	if (ItemType == ECoin)
 	{
@@ -56,6 +62,7 @@ void APickableItem::TakeItem(ATrianglePawn* TrianglePawn)
 		bWasItemAdded = TrianglePawn->AddHearts(ItemAmount, HeartName);
 	}
 
+	if (bWasItemAdded == true && bCanPlayerBuyItem == true) TrianglePawn->AddCoins(-PriceForItem);
 	if (bWasItemAdded == true) Destroy();
 }
 
@@ -77,21 +84,27 @@ void APickableItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bShouldChangeMeshScale == true) ChangeMeshScale(DeltaTime);
+	if (bShouldMeshPopUp == true) PopUpMesh(DeltaTime);
 }
 
-void APickableItem::ChangeMeshScale(float Delta)
+
+void APickableItem::PopUpMesh(float Delta)
 {
-	if (TimeElapsed <= TimeEffect)
+	if (PopUpTimeElapsed <= PopUpTime)
 	{
-		float NewScale = FMath::Lerp(0.01f, OriginalScale, TimeElapsed / TimeEffect);
+		float NewScale = FMath::Lerp(0.01f, OriginalScale, PopUpTimeElapsed / PopUpTime);
 		ItemMesh->SetRelativeScale3D(FVector(NewScale));
-		TimeElapsed += Delta;
+		PopUpTimeElapsed += Delta;
 	}
 	else
 	{
 		ItemMesh->SetRelativeScale3D(FVector(OriginalScale));
-		bShouldChangeMeshScale = false;
+		bShouldMeshPopUp = false;
 	}
 }
 
+void APickableItem::ChangeIsSimulatingPhysics(bool bIs)
+{
+	ItemBoxComp->SetSimulatePhysics(bIs);
+	ItemBoxComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+}

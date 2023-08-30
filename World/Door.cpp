@@ -53,6 +53,7 @@ void ADoor::ChangeDoor()
 	case EDT_Room: DoorMeshComp->SetMaterial(0, DoorRoomMaterial); break;
 	case EDT_Boss: DoorMeshComp->SetMaterial(0, DoorBossMaterial); break;
 	case EDT_Award: DoorMeshComp->SetMaterial(0, DoorAwardMaterial); break;
+	case EDT_Shop: DoorMeshComp->SetMaterial(0, DoorShopMaterial); break;
 	default: UE_LOG(LogTemp, Warning, TEXT("DOOR TYPE WRONG"));
 	}
 
