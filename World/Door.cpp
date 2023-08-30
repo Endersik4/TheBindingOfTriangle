@@ -38,6 +38,9 @@ void ADoor::ChangeDoor()
 {
 	if (!DoorOpenMesh || !DoorClosedMesh || !DoorKeyMesh) return;
 
+	if (DoorStatus == EDS_Open) DoorMeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Ignore);
+	else DoorMeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Block);
+
 	switch (DoorStatus)
 	{
 	case EDS_Open: DoorMeshComp->SetStaticMesh(DoorOpenMesh); break;
@@ -57,6 +60,14 @@ void ADoor::ChangeDoor()
 	default: UE_LOG(LogTemp, Warning, TEXT("DOOR TYPE WRONG"));
 	}
 
+}
+
+void ADoor::SetDoorStatus(EDoorStatus NewStatus)
+{
+	if (NewStatus == EDS_Open && PreviousDoorStatus == EDS_KeyRequired) NewStatus = EDS_KeyRequired;
+	PreviousDoorStatus = DoorStatus; 
+	DoorStatus = NewStatus;
+	ChangeDoor();
 }
 
 bool ADoor::CheckIfPlayerIsNear()

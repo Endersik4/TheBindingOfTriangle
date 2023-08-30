@@ -148,7 +148,7 @@ void ABaseEnemyAIController::SetUpEnemyAI(float MaxRadius, EEnemyDamageType Enem
 
 	StartSpecificMovement();
 
-	if (EnemyDamageType == EDT_Bullets && EnemyWhereToShoot == EWS_Player) bShouldStartShooting = true;
-	else if (EnemyDamageType == EDT_Bullets && EnemyWhereToShoot == EWS_Ahead) EnemyPawn->SetStartShooting(true);
+	if (EnemyDamageType == EEDT_Bullets && EnemyWhereToShoot == EWS_Player) bShouldStartShooting = true;
+	else if (EnemyDamageType == EEDT_Bullets && EnemyWhereToShoot == EWS_Ahead) EnemyPawn->SetStartShooting(true);
 }
 

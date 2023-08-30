@@ -46,5 +46,9 @@ private:
 		FBulletStruct BulletData;
 	UPROPERTY(EditDefaultsOnly, Category = "Award Settings")
 		UTexture2D* AwardImageIcon;
+	UPROPERTY(EditDefaultsOnly, Category = "Award Settings")
+		float RotateSpeed = 20.f;
+
+	void RotateAwardMesh(float Delta);
 
 };

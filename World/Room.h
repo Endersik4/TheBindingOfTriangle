@@ -28,6 +28,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void SetRoomData(const FRoomStruct& Room) { RoomData = Room; }
+	void AddHowManyEnemisSet(int32 Add);
 
 	UFUNCTION()
 		void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -59,9 +60,21 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Room Settings")
 		TSubclassOf<class ADoor> DoorClass;
 
-	//TArray<class ADoor> DoorData;
+	UPROPERTY(EditDefaultsOnly, Category = "Room Settings")
+		FInt32Range RangeOfEnemiesToSpawn;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Room Settings")
+		TArray<TSubclassOf<class ABaseEnemy>> ListOfEnemies;
+
+	TArray<class ADoor*> DoorData;
 	void SpawnDoors();
 	FTransform GetProperTransform(int32 Index);
+
+	// Spawn Enemies when first entered the room
+	int32 HowManyEnemiesLeft;
+	bool bShouldSpawnEnemies = true;
+	void CloseDoors(bool bClose);
+	void SpawnEnemies();
 
 	class ATrianglePawn* TrianglePawn;
 

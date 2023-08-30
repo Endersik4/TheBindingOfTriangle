@@ -25,9 +25,9 @@ enum EEnemyAction {
 
 UENUM(BlueprintType)
 enum EEnemyDamageType {
-	EDT_Bullets,
-	EDT_ContactDamage,
-	EDT_None
+	EEDT_Bullets,
+	EEDT_ContactDamage,
+	EEDT_None
 };
 
 UENUM(BlueprintType)
@@ -73,6 +73,7 @@ public:
 	bool GetShouldFocusOnPlayer() const { return bShouldFocusOnPlayer; }
 
 	void SetStartShooting(bool bNewStartShooting) { bStartShooting = bNewStartShooting; }
+	void SetCurrentRoom(class ARoom* NewRoom) { CurrentRoom = NewRoom; }
 
 	void StopEnemyMovement(float Time);
 	void ChangeMovementSpeed(bool bChangeToOriginal);
@@ -104,13 +105,16 @@ private:
 		float SpeedWhenSeePlayer = 1500.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
-		TEnumAsByte<EEnemyDamageType> EnemyDamageType = EDT_ContactDamage;
-	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings", meta = (EditCondition = "EnemyDamageType == EEnemyDamageType::EDT_Bullets"))
+		TEnumAsByte<EEnemyDamageType> EnemyDamageType = EEDT_ContactDamage;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings", meta = (EditCondition = "EnemyDamageType == EEnemyDamageType::EEDT_Bullets"))
 		TEnumAsByte<EEnemyWhereShoot> EnemyShootDirection = EWS_Player;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
 		TArray<TSubclassOf<ABaseEnemy>> EnemiesToSpawnAfterDeath;
 
+
+	// Room
+	class ARoom* CurrentRoom;
 
 	float OriginalMovementSpeed;
 
@@ -131,7 +135,6 @@ private:
 	// Spawn Enemies After Death
 	void SpawnEnemiesAfterDeath();
 
-	FTimerHandle SpawnEnemyHandle;
 	void SetUpEnemy();
 
 	class ABaseEnemyAIController* EnemyAIController;

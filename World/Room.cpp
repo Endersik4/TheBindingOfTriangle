@@ -10,6 +10,7 @@
 
 #include "TheBindingOfTriangle/TrianglePawnClasses/TrianglePawn.h"
 #include "TheBindingOfTriangle/World/Door.h"
+#include "TheBindingOfTriangle/EnemyClasses/BaseEnemy.h"
 
 // Sets default values
 ARoom::ARoom()
@@ -75,6 +76,7 @@ void ARoom::SpawnDoors()
 		ADoor* SpawnedDoor = GetWorld()->SpawnActorDeferred<ADoor>(DoorClass, NewTransfrom);
 		SpawnedDoor->SetDoorType(RoomData.DoorsType[i]);
 		SpawnedDoor->FinishSpawning(NewTransfrom);
+		DoorData.Add(SpawnedDoor);
 	}
 }
 
@@ -104,10 +106,27 @@ FTransform ARoom::GetProperTransform(int32 Index)
 
 #pragma region ///////////////// ACTIVATE ROOM BOX ///////////////////
 
+
 void  ARoom::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (TrianglePawn == nullptr) return;
 	TrianglePawn->ChangeCameraRoom(true, CameraLocationBoxComp->GetComponentLocation());
+
+	if (ListOfEnemies.Num() == 0) return;
+
+	bool bEmptyRoom = FMath::FRandRange(0.f, 100.f) < 50.f ? true : false;
+	if (bEmptyRoom == true) return;
+
+	// Change Player location so he cant stuck in between doors
+	FVector DirForImpulse = UKismetMathLibrary::FindLookAtRotation(TrianglePawn->GetActorLocation(), GetActorLocation()).Vector();
+	DirForImpulse.Z = 0.f;
+	TrianglePawn->SetActorLocation(DirForImpulse * 120.f + TrianglePawn->GetActorLocation());
+
+	if (bShouldSpawnEnemies == true)
+	{
+		CloseDoors(true);
+		SpawnEnemies();
+	}
 }
 
 void  ARoom::OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -116,3 +135,44 @@ void  ARoom::OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* O
 }
 
 #pragma endregion
+
+
+void ARoom::CloseDoors(bool bClose)
+{
+	for (ADoor* CurrentDoor : DoorData)
+	{
+		if (bClose) CurrentDoor->SetDoorStatus(EDS_Closed);
+		else CurrentDoor->SetDoorStatus(EDS_Open);
+	}
+}
+
+void ARoom::SpawnEnemies()
+{
+	int32 NumOfEnemies = FMath::RandRange(RangeOfEnemiesToSpawn.GetLowerBoundValue(), RangeOfEnemiesToSpawn.GetUpperBoundValue());
+	
+	FVector RandLocation;
+	RandLocation.Z = 98.f;
+	for (int i = 0; i != NumOfEnemies; i++)
+	{
+		int32 EnemyChoice = FMath::RandRange(0, ListOfEnemies.Num() - 1);
+		RandLocation.X = FMath::RandRange(-540.f, 540.f);
+		RandLocation.Y = FMath::RandRange(-1100.f, 1100.f);
+		RandLocation = UKismetMathLibrary::TransformLocation(GetActorTransform(), RandLocation);
+		ABaseEnemy* SpawnedEnemy = GetWorld()->SpawnActor<ABaseEnemy>(ListOfEnemies[EnemyChoice], RandLocation, FRotator(0.f));
+		if (SpawnedEnemy)
+		{
+			SpawnedEnemy->SetCurrentRoom(this);
+			HowManyEnemiesLeft++;
+		}
+	}
+}
+
+void ARoom::AddHowManyEnemisSet(int32 Add)
+{
+	HowManyEnemiesLeft += Add;
+	if (HowManyEnemiesLeft <= 0)
+	{
+		bShouldSpawnEnemies = false;
+		CloseDoors(false);
+	}
+}

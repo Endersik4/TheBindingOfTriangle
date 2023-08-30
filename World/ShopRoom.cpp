@@ -16,11 +16,11 @@ AShopRoom::AShopRoom()
 	ThirdItemLocationBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Third Item Location Box"));
 	ThirdItemLocationBox->SetupAttachment(RootComponent);
 
-	FirstItemPriceText = CreateAbstractDefaultSubobject<UTextRenderComponent>(TEXT("First Item Price Text"));
+	FirstItemPriceText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("First Item Price Text"));
 	FirstItemPriceText->SetupAttachment(RootComponent);
-	SecondItemPriceText = CreateAbstractDefaultSubobject<UTextRenderComponent>(TEXT("Second Item Price Text"));
+	SecondItemPriceText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Second Item Price Text"));
 	SecondItemPriceText->SetupAttachment(RootComponent);
-	ThirdItemPriceText = CreateAbstractDefaultSubobject<UTextRenderComponent>(TEXT("Third Item Price Text"));
+	ThirdItemPriceText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Third Item Price Text"));
 	ThirdItemPriceText->SetupAttachment(RootComponent);
 }
 

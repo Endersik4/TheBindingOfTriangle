@@ -30,6 +30,7 @@ public:
 		void ChangeDoor();
 
 	void SetDoorType(EDoorType NewType) { DoorType = NewType; }
+	void SetDoorStatus(EDoorStatus NewStatus);
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
@@ -58,6 +59,8 @@ private:
 		UStaticMesh* DoorKeyMesh;
 
 	bool CheckIfPlayerIsNear();
+
+	EDoorStatus PreviousDoorStatus;
 
 	bool bIsDoorActive = true;
 	void OpenDoorWithKey();

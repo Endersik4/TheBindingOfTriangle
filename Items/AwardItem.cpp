@@ -19,6 +19,16 @@ void AAwardItem::BeginPlay()
 void AAwardItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	RotateAwardMesh(DeltaTime);
+}
+
+void AAwardItem::RotateAwardMesh(float Delta)
+{
+	FQuat NewQuat = ItemMesh->GetRelativeRotation().Quaternion();
+	FQuat PitchQuat(FVector(0.f, 0.f, 1.f), RotateSpeed * Delta);
+	NewQuat *= PitchQuat;
+	ItemMesh->SetRelativeRotation(NewQuat);
 }
 
 void AAwardItem::TakeItem(ATrianglePawn* TrianglePawn)

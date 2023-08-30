@@ -13,6 +13,7 @@
 #include "TheBindingOfTriangle/BulletClasses/BulletComponent.h"
 #include "BaseEnemyAIController.h"
 #include "TheBindingOfTriangle/Interfaces/TakeDamageInterface.h"
+#include "TheBindingOfTriangle/World/Room.h"
 
 // Sets default values
 ABaseEnemy::ABaseEnemy()
@@ -51,7 +52,7 @@ void ABaseEnemy::BeginPlay()
 	BulletComp->SetEnemyOwner(this);
 
 	OriginalMovementSpeed = FloatingMovement->GetMaxSpeed();
-	GetWorld()->GetTimerManager().SetTimer(SpawnEnemyHandle, this, &ABaseEnemy::SetUpEnemy, 1.f, false);
+	SetUpEnemy();
 }
 
 // Called every frame
@@ -90,6 +91,8 @@ void ABaseEnemy::TakeDamage(float Damage, float Impulse, FVector ImpulseDir)
 
 		SpawnEnemiesAfterDeath();
 
+		if (CurrentRoom) CurrentRoom->AddHowManyEnemisSet(-1);
+
 		Destroy();
 		return;
 	}
@@ -105,13 +108,19 @@ void ABaseEnemy::SpawnEnemiesAfterDeath()
 		float Y = FMath::FRandRange(-150.f, 150.f);
 		FVector SpawnLoc = GetActorLocation() + FVector(X, Y, 0.f);
 		float Yaw = FMath::FRandRange(-180.f, 180.f);
-		GetWorld()->SpawnActor<ABaseEnemy>(EnemyToSpawn, SpawnLoc, FRotator(0.f, Yaw, 0.f));
+		ABaseEnemy* SpawnedEnemy = GetWorld()->SpawnActor<ABaseEnemy>(EnemyToSpawn, SpawnLoc, FRotator(0.f, Yaw, 0.f));
+		if (SpawnedEnemy)
+		{
+			SpawnedEnemy->SetCurrentRoom(CurrentRoom);
+			CurrentRoom->AddHowManyEnemisSet(1);
+		}
+		
 	}
 }
 
 void ABaseEnemy::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (EnemyDamageType == EDT_ContactDamage) ContactDamage(OtherActor, SweepResult);
+	if (EnemyDamageType == EEDT_ContactDamage) ContactDamage(OtherActor, SweepResult);
 }
 
 void ABaseEnemy::ContactDamage(AActor* ActorToHit, const FHitResult& SweepResult)
