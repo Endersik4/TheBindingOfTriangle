@@ -123,6 +123,14 @@ void UBulletComponent::SpawnBullet(FVector StartLocation, FVector DirForBullet)
 	BulletActor->SetBulletScale(HoldBulletDivideCounter);
 }
 
+void UBulletComponent::SpawnImmediatelyBombBullet()
+{
+	ABullet* BulletActor = GetWorld()->SpawnActor<ABullet>(Bullet.BulletClass, GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation());
+	if (BulletActor == nullptr) return;
+	BulletActor->SetBulletData(Bullet);
+	BulletActor->CallExplodeBulletBomb();
+}
+
 void UBulletComponent::LaserBullet(FVector StartLocation, FVector DirForLaser)
 {
 	TArray<AActor*> ActorsToIgnore;

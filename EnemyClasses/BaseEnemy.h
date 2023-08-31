@@ -27,6 +27,7 @@ UENUM(BlueprintType)
 enum EEnemyDamageType {
 	EEDT_Bullets,
 	EEDT_ContactDamage,
+	EEDT_ContactBombDamage,
 	EEDT_None
 };
 
@@ -49,7 +50,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -87,30 +88,41 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
 		float Health = 20.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings|ActionAfterHealth")
+		bool bDoActionAfterLostHealth = false;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings|ActionAfterHealth", meta = (EditCondition = "bDoActionAfterLostHealth"))
+		float HealthLeft = Health / 2;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings|ActionAfterHealth", meta = (EditCondition = "bDoActionAfterLostHealth"))
+		TArray<TEnumAsByte<EEnemyDamageType>>  ActionAfterHealth = {EEDT_Bullets};
+
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
 		float MaxRandomLocationRadius = 2500.f;
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
 		TSubclassOf<class AGeometryCollectionActor> EnemyMeshFracture;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings|Action When Spawned")
 		TEnumAsByte<EEnemySpawnAction> EnemyActionWhenSpawned = ESA_WalkAimlessly;
-	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings", meta = (EditCondition = "EnemyActionWhenSpawned == EEnemySpawnAction::ESA_BouncesOfWalls"))
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings|Action When Spawned", meta = (EditCondition = "EnemyActionWhenSpawned == EEnemySpawnAction::ESA_BouncesOfWalls"))
 		float SpeedToReachWall = 5.f;
-	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings", meta = (EditCondition = "EnemyActionWhenSpawned == EEnemySpawnAction::ESA_StandsStill"))
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings|Action When Spawned", meta = (EditCondition = "EnemyActionWhenSpawned == EEnemySpawnAction::ESA_StandsStill"))
 		bool bShouldFocusOnPlayer;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings|Action When Spotted Player")
 		TEnumAsByte<EEnemyAction> EnemyActionSpottedPlayer = EA_ChasesPlayer;
-	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings", meta = (EditCondition = "EnemyActionSpottedPlayer == EEnemyAction::EA_ChargePlayer"))
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings|Action When Spotted Player", meta = (EditCondition = "EnemyActionSpottedPlayer == EEnemyAction::EA_ChargePlayer"))
 		float SpeedWhenSeePlayer = 1500.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
-		TEnumAsByte<EEnemyDamageType> EnemyDamageType = EEDT_ContactDamage;
-	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings", meta = (EditCondition = "EnemyDamageType == EEnemyDamageType::EEDT_Bullets"))
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings|Damage")
+		TArray<TEnumAsByte<EEnemyDamageType>> EnemyDamageTypes = { EEDT_ContactDamage };
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings|Damage", meta = (EditCondition = "EnemyDamageType == EEnemyDamageType::EEDT_Bullets"))
 		TEnumAsByte<EEnemyWhereShoot> EnemyShootDirection = EWS_Player;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
 		TArray<TSubclassOf<ABaseEnemy>> EnemiesToSpawnAfterDeath;
+
+	UPROPERTY(EditAnywhere, Category = "Item Settings")
+		float PopUpTime = 0.4f;
 
 
 	// Room
@@ -118,11 +130,15 @@ private:
 
 	float OriginalMovementSpeed;
 
+	// After enemy lost some health:
+	void ActionWhenLostHealth();
+
 	// Shoot
 	bool bStartShooting;
 
 	// Damage
 	void ContactDamage(AActor* ActorToHit, const FHitResult& SweepResult);
+
 	UMaterialInstanceDynamic* BaseEnemyDynamicMat;
 
 	// Bouncing
@@ -131,6 +147,12 @@ private:
 	FVector BounceLocation;
 	void InterpToBounceOfWallsLocation(float DeltaTime);
 	void CalculateLocationToBounceOfWalls();
+
+	// Change mesh scale from 0.f to original scale in Time (TimeEffect)
+	bool bShouldMeshPopUp = true;
+	float OriginalScale;
+	float PopUpTimeElapsed;
+	void PopUpMesh(float Delta);
 
 	// Spawn Enemies After Death
 	void SpawnEnemiesAfterDeath();

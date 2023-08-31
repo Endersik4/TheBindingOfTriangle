@@ -19,6 +19,7 @@ ABaseEnemyAIController::ABaseEnemyAIController()
 void ABaseEnemyAIController::BeginPlay()
 {
 	Super::BeginPlay();
+
 }
 
 void ABaseEnemyAIController::Tick(float DeltaTime)
@@ -137,7 +138,7 @@ void ABaseEnemyAIController::MoveEnemyHorizontallyVertically()
 	MoveToLocation(RandLocation, 10.f, false, true);
 }
 
-void ABaseEnemyAIController::SetUpEnemyAI(float MaxRadius, EEnemyDamageType EnemyDamageType, EEnemyWhereShoot EnemyWhereToShoot)
+void ABaseEnemyAIController::SetUpEnemyAI(float MaxRadius, const TArray<TEnumAsByte<EEnemyDamageType>>& EnemyDamageTypes, const EEnemyWhereShoot & EnemyWhereToShoot)
 {
 	MaxRandomLocationRadius = MaxRadius;
 	NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
@@ -145,10 +146,16 @@ void ABaseEnemyAIController::SetUpEnemyAI(float MaxRadius, EEnemyDamageType Enem
 	PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 
 	if (EnemyPawn == nullptr) return;
-
+	
 	StartSpecificMovement();
 
-	if (EnemyDamageType == EEDT_Bullets && EnemyWhereToShoot == EWS_Player) bShouldStartShooting = true;
-	else if (EnemyDamageType == EEDT_Bullets && EnemyWhereToShoot == EWS_Ahead) EnemyPawn->SetStartShooting(true);
+	ChangeShootingDirection(EnemyDamageTypes, EnemyWhereToShoot);
 }
 
+void ABaseEnemyAIController::ChangeShootingDirection(const TArray<TEnumAsByte<EEnemyDamageType>>& EnemyDamageTypes, const EEnemyWhereShoot &EnemyWhereToShoot)
+{
+	if (EnemyDamageTypes.FindByKey(EEDT_Bullets) == nullptr || EnemyPawn == nullptr) return;
+
+	bShouldStartShooting = EnemyWhereToShoot == EWS_Player ? true : false;
+	EnemyPawn->SetStartShooting(EnemyWhereToShoot == EWS_Ahead ? true : false);
+}

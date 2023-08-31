@@ -49,10 +49,9 @@ void ABaseEnemy::BeginPlay()
 	EnemyMeshComp->SetMaterial(1, BaseEnemyDynamicMat);
 
 	EnemyAIController = Cast<ABaseEnemyAIController>(GetController());
-	BulletComp->SetEnemyOwner(this);
 
-	OriginalMovementSpeed = FloatingMovement->GetMaxSpeed();
-	SetUpEnemy();
+	OriginalScale = EnemyMeshComp->GetRelativeScale3D().X;
+	EnemyMeshComp->SetRelativeScale3D(FVector(0.01f));
 }
 
 // Called every frame
@@ -63,6 +62,8 @@ void ABaseEnemy::Tick(float DeltaTime)
 	if (EnemyActionWhenSpawned == ESA_BouncesOfWalls) InterpToBounceOfWallsLocation(DeltaTime);
 
 	if (bStartShooting == true) BulletComp->Shoot(GetActorRotation());
+
+	if (bShouldMeshPopUp == true) PopUpMesh(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -76,6 +77,8 @@ void ABaseEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 void ABaseEnemy::TakeDamage(float Damage, float Impulse, FVector ImpulseDir)
 {
 	Health -= Damage;
+
+	ActionWhenLostHealth();
 
 	if (Health <= 0.f)
 	{
@@ -96,8 +99,15 @@ void ABaseEnemy::TakeDamage(float Damage, float Impulse, FVector ImpulseDir)
 		Destroy();
 		return;
 	}
-	CollisionBoxComp->AddImpulse(Impulse * ImpulseDir, NAME_None, true);
+	if (CollisionBoxComp->IsSimulatingPhysics() == true) CollisionBoxComp->AddImpulse(Impulse * ImpulseDir, NAME_None, true);
 	ChangeColorAfterHit(BaseEnemyDynamicMat);
+}
+
+void ABaseEnemy::ActionWhenLostHealth()
+{
+	if (bDoActionAfterLostHealth == false || Health > HealthLeft) return;
+
+	EnemyAIController->ChangeShootingDirection(ActionAfterHealth, EnemyShootDirection);
 }
 
 void ABaseEnemy::SpawnEnemiesAfterDeath()
@@ -114,17 +124,22 @@ void ABaseEnemy::SpawnEnemiesAfterDeath()
 			SpawnedEnemy->SetCurrentRoom(CurrentRoom);
 			CurrentRoom->AddHowManyEnemisSet(1);
 		}
-		
 	}
 }
 
 void ABaseEnemy::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (EnemyDamageType == EEDT_ContactDamage) ContactDamage(OtherActor, SweepResult);
+	if (EnemyDamageTypes.FindByKey(EEDT_ContactDamage) || EnemyDamageTypes.FindByKey(EEDT_ContactBombDamage)) ContactDamage(OtherActor, SweepResult);
 }
 
 void ABaseEnemy::ContactDamage(AActor* ActorToHit, const FHitResult& SweepResult)
 {
+	if (EnemyDamageTypes.FindByKey(EEDT_ContactBombDamage))
+	{
+		BulletComp->SpawnImmediatelyBombBullet();
+		return;
+	}
+
 	ITakeDamageInterface* DamageInterface = Cast<ITakeDamageInterface>(ActorToHit);
 	if (DamageInterface == nullptr) return;
 
@@ -133,16 +148,6 @@ void ABaseEnemy::ContactDamage(AActor* ActorToHit, const FHitResult& SweepResult
 }
 #pragma endregion
 
-void ABaseEnemy::StopEnemyMovement(float Time)
-{
-	EnemyAIController->StopMovementForTime(Time);
-}
-
-void ABaseEnemy::ChangeMovementSpeed(bool bChangeToOriginal)
-{
-	if (bChangeToOriginal == true) FloatingMovement->MaxSpeed = OriginalMovementSpeed;
-	else FloatingMovement->MaxSpeed = SpeedWhenSeePlayer;
-}
 #pragma region /////////////// BOUNCE OF WALLS //////////////////
 
 void ABaseEnemy::CalculateLocationToBounceOfWalls()
@@ -181,14 +186,46 @@ void ABaseEnemy::InterpToBounceOfWallsLocation(float DeltaTime)
 
 #pragma endregion
 
+void ABaseEnemy::PopUpMesh(float Delta)
+{
+	if (PopUpTimeElapsed <= PopUpTime)
+	{
+		float NewScale = FMath::Lerp(0.01f, OriginalScale, PopUpTimeElapsed / PopUpTime);
+		EnemyMeshComp->SetRelativeScale3D(FVector(NewScale));
+		PopUpTimeElapsed += Delta;
+	}
+	else
+	{
+		EnemyMeshComp->SetRelativeScale3D(FVector(OriginalScale));
+
+		// Activate enemy after pop up effect
+		SetUpEnemy();
+
+		bShouldMeshPopUp = false;
+	}
+}
+
 void ABaseEnemy::SetUpEnemy()
 {
+	BulletComp->SetEnemyOwner(this);
+	OriginalMovementSpeed = FloatingMovement->GetMaxSpeed();
+
 	if (EnemyActionWhenSpawned == ESA_BouncesOfWalls)
 	{
 		EnemyActionSpottedPlayer = EA_None;
 		CollisionBoxComp->SetSimulatePhysics(false);
 		CalculateLocationToBounceOfWalls();
 	}
-	EnemyAIController->SetUpEnemyAI(MaxRandomLocationRadius, EnemyDamageType, EnemyShootDirection);
+	EnemyAIController->SetUpEnemyAI(MaxRandomLocationRadius, EnemyDamageTypes, EnemyShootDirection);
 }
 
+void ABaseEnemy::ChangeMovementSpeed(bool bChangeToOriginal)
+{
+	if (bChangeToOriginal == true) FloatingMovement->MaxSpeed = OriginalMovementSpeed;
+	else FloatingMovement->MaxSpeed = SpeedWhenSeePlayer;
+}
+
+void ABaseEnemy::StopEnemyMovement(float Time)
+{
+	EnemyAIController->StopMovementForTime(Time);
+}

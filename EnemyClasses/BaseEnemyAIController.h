@@ -23,8 +23,10 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 	
-	void SetUpEnemyAI(float MaxRadius, enum EEnemyDamageType, enum EEnemyWhereShoot);
+	void SetUpEnemyAI(float MaxRadius,const TArray<TEnumAsByte<enum EEnemyDamageType>> & EnemyDamageTypes, const enum EEnemyWhereShoot &);
 	void StopMovementForTime(float Time);
+
+	void ChangeShootingDirection(const TArray<TEnumAsByte<enum EEnemyDamageType>>& EnemyDamageTypes, const EEnemyWhereShoot & EnemyWhereToShoot);
 private:
 	UFUNCTION()
 		void HandleTargetPerceptionUpdated(AActor* Actor, struct FAIStimulus Stimulus);

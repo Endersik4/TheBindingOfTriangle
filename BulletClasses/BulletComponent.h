@@ -48,6 +48,8 @@ public:
 	void SetEnemyOwner(class ABaseEnemy* NewOwner) { EnemyOwner = NewOwner; }
 	void RestartLaser();
 
+	void SpawnImmediatelyBombBullet();
+
 private:
 	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
 		FBulletStruct Bullet;

@@ -34,6 +34,8 @@ public:
 		void OffsetTimelineProgress(float Value);
 	void SetOffsetTimeline();
 
+	void CallExplodeBulletBomb() { HitAsBombBullet(); }
+
 private:
 	UFUNCTION()
 		void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);

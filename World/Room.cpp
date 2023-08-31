@@ -112,21 +112,21 @@ void  ARoom::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 	if (TrianglePawn == nullptr) return;
 	TrianglePawn->ChangeCameraRoom(true, CameraLocationBoxComp->GetComponentLocation());
 
-	if (ListOfEnemies.Num() == 0) return;
-
-	bool bEmptyRoom = FMath::FRandRange(0.f, 100.f) < 50.f ? true : false;
-	if (bEmptyRoom == true) return;
-
 	// Change Player location so he cant stuck in between doors
 	FVector DirForImpulse = UKismetMathLibrary::FindLookAtRotation(TrianglePawn->GetActorLocation(), GetActorLocation()).Vector();
 	DirForImpulse.Z = 0.f;
 	TrianglePawn->SetActorLocation(DirForImpulse * 120.f + TrianglePawn->GetActorLocation());
 
-	if (bShouldSpawnEnemies == true)
+	if (ListOfEnemies.Num() == 0) return;
+
+	bool bEmptyRoom = FMath::FRandRange(0.f, 100.f) < 50.f ? true : false;
+	if (bEmptyRoom == true)
 	{
-		CloseDoors(true);
-		SpawnEnemies();
+		bShouldSpawnEnemies = false;
+		return;
 	}
+
+	GetWorldTimerManager().SetTimer(TimeToSpawnEnemiesHandle, this, &ARoom::SpawnEnemiesAfterTime, SpawnEnemiesTime, false);
 }
 
 void  ARoom::OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -146,6 +146,14 @@ void ARoom::CloseDoors(bool bClose)
 	}
 }
 
+void ARoom::SpawnEnemiesAfterTime()
+{
+	if (bShouldSpawnEnemies == false) return;
+
+	CloseDoors(true);
+	SpawnEnemies();
+}
+
 void ARoom::SpawnEnemies()
 {
 	int32 NumOfEnemies = FMath::RandRange(RangeOfEnemiesToSpawn.GetLowerBoundValue(), RangeOfEnemiesToSpawn.GetUpperBoundValue());
@@ -158,10 +166,11 @@ void ARoom::SpawnEnemies()
 		RandLocation.X = FMath::RandRange(-540.f, 540.f);
 		RandLocation.Y = FMath::RandRange(-1100.f, 1100.f);
 		RandLocation = UKismetMathLibrary::TransformLocation(GetActorTransform(), RandLocation);
-		ABaseEnemy* SpawnedEnemy = GetWorld()->SpawnActor<ABaseEnemy>(ListOfEnemies[EnemyChoice], RandLocation, FRotator(0.f));
+		ABaseEnemy* SpawnedEnemy = GetWorld()->SpawnActor<ABaseEnemy>(ListOfEnemies[EnemyChoice], RandLocation, FRotator(0.f, 45.f, 0.f));
 		if (SpawnedEnemy)
 		{
 			SpawnedEnemy->SetCurrentRoom(this);
+			if (SpawnedEnemy->GetEnemyActionWhenSpawned() != ESA_BouncesOfWalls) SpawnedEnemy->SetActorRotation(FRotator(0.f));
 			HowManyEnemiesLeft++;
 		}
 	}

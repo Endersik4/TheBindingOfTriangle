@@ -65,10 +65,16 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Room Settings")
 		TArray<TSubclassOf<class ABaseEnemy>> ListOfEnemies;
+	UPROPERTY(EditDefaultsOnly, Category = "Room Settings")
+		float SpawnEnemiesTime = 0.2f;
 
 	TArray<class ADoor*> DoorData;
 	void SpawnDoors();
 	FTransform GetProperTransform(int32 Index);
+
+	// Spawn enemies after some time
+	FTimerHandle TimeToSpawnEnemiesHandle;
+	void SpawnEnemiesAfterTime();
 
 	// Spawn Enemies when first entered the room
 	int32 HowManyEnemiesLeft;

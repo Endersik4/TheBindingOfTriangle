@@ -40,7 +40,6 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 {
 	if (BulletData.TypeOfBullet == ETB_Bomb) {
 		HitAsBombBullet();
-		Destroy();
 		return;
 	}
 
@@ -81,8 +80,9 @@ void ABullet::HitAsBombBullet()
 		{
 			Hit.GetComponent()->AddRadialImpulse(GetActorLocation(), BulletData.ExplodeRadius, BulletData.Impulse * 10.f, ERadialImpulseFalloff::RIF_Constant, true);
 		}
-
 	}
+
+	Destroy();
 }
 
 #pragma region //////////////// OFFSET TIMELINE ////////////////////
