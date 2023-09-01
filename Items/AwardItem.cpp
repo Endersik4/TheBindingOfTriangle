@@ -33,6 +33,14 @@ void AAwardItem::RotateAwardMesh(float Delta)
 
 void AAwardItem::TakeItem(ATrianglePawn* TrianglePawn)
 {
+	if (bAddNewSlotForHeart == true)
+	{
+		TrianglePawn->AddSlotForHeart(SlotAmount, HeartNameToAddSlot);
+		bAddNewSlotForHeart = false;
+		Destroy();
+		return;
+	}
+
 	for (EAwardAction Action : AwardAction)
 	{
 		if (Action == EAA_Multiply)
@@ -77,7 +85,12 @@ void AAwardItem::TakeItem(ATrianglePawn* TrianglePawn)
 			TrianglePawn->BulletComponent->GetBulletData().bShootHoldBulletAfterTime = BulletData.bShootHoldBulletAfterTime;
 			TrianglePawn->BulletComponent->GetBulletData().HoldBulletTime = BulletData.HoldBulletTime;
 			TrianglePawn->BulletComponent->GetBulletData().HoldBulletTriangleColor = BulletData.HoldBulletTriangleColor;
-
+		}
+		else if (Action == EAA_ReplaceAmountITD || (Action == EAA_ReplaceCircleAngleRadius && TrianglePawn->BulletComponent->GetBulletData().Amount == ExpectedBulletsAmount))
+		{
+			if (Action == EAA_ReplaceAmountITD) TrianglePawn->BulletComponent->GetBulletData().Amount = BulletData.Amount;
+			TrianglePawn->BulletComponent->GetBulletData().DegreeBetween = BulletData.DegreeBetween;
+			TrianglePawn->BulletComponent->GetBulletData().CirceAngle = BulletData.CirceAngle;
 		}
 	}
 

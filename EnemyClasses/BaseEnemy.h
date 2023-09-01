@@ -69,9 +69,13 @@ public:
 	UFUNCTION()
 		void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UFUNCTION(BlueprintPure)
+		UMaterialInstanceDynamic* GetBaseEnemyHitMaterial() const { return BaseEnemyDynamicMat; }
+
 	EEnemyAction GetEnemyActionSpottedPlayer() const { return EnemyActionSpottedPlayer; }
 	EEnemySpawnAction GetEnemyActionWhenSpawned() const { return EnemyActionWhenSpawned; }
 	bool GetShouldFocusOnPlayer() const { return bShouldFocusOnPlayer; }
+	FFloatRange GetRangeForRandomTimeWhenNextMove() const {return RangeForRandomTimeWhenNextMove;}
 
 	void SetStartShooting(bool bNewStartShooting) { bStartShooting = bNewStartShooting; }
 	void SetCurrentRoom(class ARoom* NewRoom) { CurrentRoom = NewRoom; }
@@ -81,7 +85,7 @@ public:
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UBoxComponent* CollisionBoxComp;
-	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	UPROPERTY(EditDefaultsOnly,Category = "Components")
 		class UStaticMeshComponent* EnemyMeshComp;
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UFloatingPawnMovement* FloatingMovement;
@@ -98,6 +102,8 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
 		float MaxRandomLocationRadius = 2500.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
+		FFloatRange RangeForRandomTimeWhenNextMove = FFloatRange(2.f, 6.f);
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Settings")
 		TSubclassOf<class AGeometryCollectionActor> EnemyMeshFracture;
 

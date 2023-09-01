@@ -87,6 +87,7 @@ public:
 	bool AddBombs(int32 AmountToAdd);
 	bool AddKeys(int32 AmountToAdd);
 	bool AddHearts(int32 AmountToAdd, FString HeartName);
+	void AddSlotForHeart(int32 SlotsToAdd, FString HeartName);
 
 	void ChangeCameraRoom(bool bChangeLoc, FVector CameraLocation);
 
@@ -103,6 +104,8 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 		class UStaticMeshComponent* TriangleMeshComp;
 
+	UPROPERTY(EditAnywhere, Category = "Player Settings")
+		int32 MaxOfAllHearts = 40;
 	UPROPERTY(EditAnywhere, Category = "Player Settings")
 		TArray<FHeartStruct> CurrentHearts;
 	UPROPERTY(EditAnywhere, Category = "Player Settings")

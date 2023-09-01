@@ -150,13 +150,22 @@ void ATrianglePawn::TakeDamage(float Damage, float Impulse, FVector ImpulseDir)
 {
 	if (bCanGetHit == false) return;
 
-	CurrentHearts.Last().Amount -= FMath::TruncToInt(Damage);
-	if (CurrentHearts.Last().Amount <= 0)
+	for (int i = CurrentHearts.Num() - 1; i >= 0; i--)
 	{
-		if (CurrentHearts.Num() != 1) CurrentHearts.RemoveAt(CurrentHearts.Num() - 1);
-		else UE_LOG(LogTemp, Error, TEXT("DEAD"));	
+		if (CurrentHearts[i].Amount > 0)
+		{
+			CurrentHearts[i].Amount -= FMath::TruncToInt(Damage);
+			if (i == 0 && CurrentHearts[i].Amount <= 0) UE_LOG(LogTemp, Error, TEXT("DEAD"));
+			break;
+		}
+		if (i == 0 && CurrentHearts[i].Amount <= 0)
+		{
+			CurrentHearts[i].Amount = 0;
+			UE_LOG(LogTemp, Error, TEXT("DEAD"));
+			break;
+		}
 	}
-	CurrentHearts.Sort();
+
 	RestartHudWidgetVariables();
 
 	TriangleBoxComp->AddImpulse(ImpulseDir * Impulse, NAME_None, true);
@@ -252,6 +261,35 @@ bool ATrianglePawn::AddHearts(int32 AmountToAdd, FString HeartName)
 	HudWidget->CallAddHeartToTile();
 
 	return true;
+}
+void ATrianglePawn::AddSlotForHeart(int32 SlotsToAdd, FString HeartName)
+{
+	int32 CurrentAmount = 0;
+	FHeartStruct* FoundHeart = nullptr;
+	for (FHeartStruct& CurrHeart : CurrentHearts)
+	{
+		if (CurrHeart.bEmptyTextureAfterDelete == false) CurrentAmount += CurrHeart.MaxAmount;
+		else
+		{
+			if (CurrHeart.Amount % 2 == 0) CurrentAmount += CurrHeart.Amount;
+			else CurrentAmount += (CurrHeart.Amount + 1);
+		}
+
+		if (CurrHeart.HeartName == HeartName) FoundHeart = &CurrHeart;
+	}
+	if (CurrentAmount + SlotsToAdd > MaxOfAllHearts)
+	{
+		SlotsToAdd = FMath::Abs(((CurrentAmount + SlotsToAdd) - MaxOfAllHearts) - SlotsToAdd);
+		if (CurrentAmount + SlotsToAdd > MaxOfAllHearts) return;
+	}
+
+	if (FoundHeart)
+	{
+		FoundHeart->MaxAmount += SlotsToAdd;
+		FoundHeart->Amount += SlotsToAdd;
+	}
+	HudWidget->CurrentHearts = CurrentHearts;
+	HudWidget->CallAddHeartToTile();
 }
 #pragma endregion
 

@@ -16,7 +16,9 @@ enum EAwardAction {
 	EAA_ReplaceBulletType,
 	EAA_ReplaceWayCurve,
 	EAA_ReplaceShouldBack,
-	EAA_ReplaceHoldBullet
+	EAA_ReplaceHoldBullet,
+	EAA_ReplaceAmountITD,
+	EAA_ReplaceCircleAngleRadius
 };
 
 UCLASS()
@@ -39,10 +41,19 @@ public:
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Award Settings")
+		bool bAddNewSlotForHeart = false;
+	UPROPERTY(EditDefaultsOnly, Category = "Award Settings", meta = (EditCondition = "bAddNewSlotForHeart", EditConditionHides))
+		FString HeartNameToAddSlot;
+	UPROPERTY(EditDefaultsOnly, Category = "Award Settings", meta = (EditCondition = "bAddNewSlotForHeart", EditConditionHides))
+		int32 SlotAmount = 2;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Award Settings", meta = (EditCondition = "!bAddNewSlotForHeart", EditConditionHides))
 		TArray<TEnumAsByte<EAwardAction>> AwardAction;
+	UPROPERTY(EditDefaultsOnly, Category = "Award Settings", meta = (EditCondition = "!bAddNewSlotForHeart", EditConditionHides))
+		int32 ExpectedBulletsAmount = 1;
 	UPROPERTY(EditDefaultsOnly, Category = "Award Settings")
 		FText AwardDescription;
-	UPROPERTY(EditDefaultsOnly, Category = "Award Settings")
+	UPROPERTY(EditDefaultsOnly, Category = "Award Settings", meta = (EditCondition = "!bAddNewSlotForHeart", EditConditionHides))
 		FBulletStruct BulletData;
 	UPROPERTY(EditDefaultsOnly, Category = "Award Settings")
 		UTexture2D* AwardImageIcon;

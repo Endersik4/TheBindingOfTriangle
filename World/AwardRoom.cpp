@@ -10,12 +10,12 @@ AAwardRoom::AAwardRoom()
 {
 	PedestalForItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Pedestal For Item Mesh"));
 	PedestalForItemMesh->SetupAttachment(RootComponent);
+	
 }
 
 void AAwardRoom::BeginPlay()
 {
 	Super::BeginPlay();
-	PickRandomAwardFromList();
 }
 
 void AAwardRoom::Tick(float DeltaTime)
@@ -23,8 +23,16 @@ void AAwardRoom::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+void AAwardRoom::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	Super::OnBoxBeginOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
+
+	if (bAwardSpawned == false) PickRandomAwardFromList();
+}
+
 void AAwardRoom::PickRandomAwardFromList()
 {
 	int32 RandChoice = FMath::RandRange(0, RandomAwardItemList.Num() - 1);
 	GetWorld()->SpawnActor<AAwardItem>(RandomAwardItemList[RandChoice], PedestalForItemMesh->GetComponentLocation(), FRotator(0.f));
+	bAwardSpawned = true;
 }

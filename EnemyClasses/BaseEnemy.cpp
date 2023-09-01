@@ -9,6 +9,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "GeometryCollection/GeometryCollectionActor.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
+#include "NavigationSystem.h"
 
 #include "TheBindingOfTriangle/BulletClasses/BulletComponent.h"
 #include "BaseEnemyAIController.h"
@@ -114,14 +115,15 @@ void ABaseEnemy::SpawnEnemiesAfterDeath()
 {
 	for (TSubclassOf<ABaseEnemy> EnemyToSpawn : EnemiesToSpawnAfterDeath)
 	{
-		float X = FMath::FRandRange(-150.f, 150.f);
-		float Y = FMath::FRandRange(-150.f, 150.f);
-		FVector SpawnLoc = GetActorLocation() + FVector(X, Y, 0.f);
+		FNavLocation RandLoc;
+		if (UNavigationSystemV1::GetCurrent(GetWorld())->GetRandomReachablePointInRadius(GetActorLocation(), 250.f, RandLoc) == false) return;
 		float Yaw = FMath::FRandRange(-180.f, 180.f);
-		ABaseEnemy* SpawnedEnemy = GetWorld()->SpawnActor<ABaseEnemy>(EnemyToSpawn, SpawnLoc, FRotator(0.f, Yaw, 0.f));
+
+		ABaseEnemy* SpawnedEnemy = GetWorld()->SpawnActor<ABaseEnemy>(EnemyToSpawn, RandLoc.Location, FRotator(0.f, Yaw, 0.f));
 		if (SpawnedEnemy)
 		{
 			SpawnedEnemy->SetCurrentRoom(CurrentRoom);
+			if (CurrentRoom == nullptr) continue;
 			CurrentRoom->AddHowManyEnemisSet(1);
 		}
 	}
@@ -136,7 +138,8 @@ void ABaseEnemy::ContactDamage(AActor* ActorToHit, const FHitResult& SweepResult
 {
 	if (EnemyDamageTypes.FindByKey(EEDT_ContactBombDamage))
 	{
-		BulletComp->SpawnImmediatelyBombBullet();
+		Health = 0.01f;
+		BulletComp->SpawnImmediatelyBombBullet();	
 		return;
 	}
 

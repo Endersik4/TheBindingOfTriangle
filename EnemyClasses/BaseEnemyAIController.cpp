@@ -66,9 +66,10 @@ void ABaseEnemyAIController::StartSpecificMovement()
 {
 	bStopMovement = false;
 
+	float Time = FMath::FRandRange(EnemyPawn->GetRangeForRandomTimeWhenNextMove().GetLowerBoundValue(), EnemyPawn->GetRangeForRandomTimeWhenNextMove().GetUpperBoundValue());
 	if (EnemyPawn->GetEnemyActionWhenSpawned() == ESA_WalkAimlessly)
 	{
-		GetWorld()->GetTimerManager().SetTimer(RandomLocationHandle, this, &ABaseEnemyAIController::PickRandomLocationInRoom, FMath::FRandRange(1.f, 3.f), true, 0.f);
+		GetWorld()->GetTimerManager().SetTimer(RandomLocationHandle, this, &ABaseEnemyAIController::PickRandomLocationInRoom, Time, true, 0.f);
 	}
 	else if (EnemyPawn->GetEnemyActionWhenSpawned() == ESA_StandsStill)
 	{
@@ -76,7 +77,7 @@ void ABaseEnemyAIController::StartSpecificMovement()
 	}
 	else if (EnemyPawn->GetEnemyActionWhenSpawned() == ESA_WalkHorizontallyVertically)
 	{
-		GetWorld()->GetTimerManager().SetTimer(MoveHorizontallyHandle, this, &ABaseEnemyAIController::MoveEnemyHorizontallyVertically, FMath::FRandRange(2.f, 6.f), true, 0.1f);
+		GetWorld()->GetTimerManager().SetTimer(MoveHorizontallyHandle, this, &ABaseEnemyAIController::MoveEnemyHorizontallyVertically, Time, true, 0.1f);
 	}
 }
 
@@ -155,6 +156,7 @@ void ABaseEnemyAIController::SetUpEnemyAI(float MaxRadius, const TArray<TEnumAsB
 void ABaseEnemyAIController::ChangeShootingDirection(const TArray<TEnumAsByte<EEnemyDamageType>>& EnemyDamageTypes, const EEnemyWhereShoot &EnemyWhereToShoot)
 {
 	if (EnemyDamageTypes.FindByKey(EEDT_Bullets) == nullptr || EnemyPawn == nullptr) return;
+	UE_LOG(LogTemp, Warning, TEXT("HEATLH"));
 
 	bShouldStartShooting = EnemyWhereToShoot == EWS_Player ? true : false;
 	EnemyPawn->SetStartShooting(EnemyWhereToShoot == EWS_Ahead ? true : false);

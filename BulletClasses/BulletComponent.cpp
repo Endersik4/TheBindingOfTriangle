@@ -102,7 +102,7 @@ void UBulletComponent::DirectionForBullets(FRotator MeshRelativeRotation)
 				if (EnemyOwner) EnemyOwner->StopEnemyMovement(Bullet.LaserTime);
 				if (Bullet.LaserNiagaraParticle)
 				{
-					SpawnedLaserParticle = UNiagaraFunctionLibrary::SpawnSystemAttached(Bullet.LaserNiagaraParticle, GetOwner()->GetRootComponent(), FName(""), FVector(0.f), FRotator(-90.f, MeshRelativeRotation.Yaw, 0.f), EAttachLocation::KeepRelativeOffset, true);
+					SpawnedLaserParticle = UNiagaraFunctionLibrary::SpawnSystemAttached(Bullet.LaserNiagaraParticle, GetOwner()->GetRootComponent(), FName(""), FVector(100.f,0.f,0.f), FRotator(-90.f, MeshRelativeRotation.Yaw, 0.f), EAttachLocation::KeepRelativeOffset, true);
 					SpawnedLaserParticle->SetWorldRotation(FRotator(-90.f, MeshRelativeRotation.Yaw, 0.f));
 				}
 				bShootLaser = true;
@@ -135,7 +135,6 @@ void UBulletComponent::LaserBullet(FVector StartLocation, FVector DirForLaser)
 {
 	TArray<AActor*> ActorsToIgnore;
 	TArray<FHitResult> Hits;
-	DrawDebugLine(GetWorld(), StartLocation, StartLocation + DirForLaser * Bullet.Distance, FColor::Green, false, 0.f, (uint8)0U, 5.f);
 	if (UKismetSystemLibrary::LineTraceMulti(GetWorld(), StartLocation, StartLocation + DirForLaser * Bullet.Distance, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel1),
 		false, ActorsToIgnore, EDrawDebugTrace::None, Hits, true) == false) return;	
 

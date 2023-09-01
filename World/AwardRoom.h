@@ -25,6 +25,8 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 	
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
@@ -32,5 +34,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Award Room Settings")
 		TArray<TSubclassOf<class AAwardItem>> RandomAwardItemList;
 
+	
+	bool bAwardSpawned = false;
 	void PickRandomAwardFromList();
 };
