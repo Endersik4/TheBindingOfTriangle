@@ -91,6 +91,8 @@ public:
 
 	void ChangeCameraRoom(bool bChangeLoc, FVector CameraLocation);
 
+	void SpawnItemDescriptionWidget(FText Description);
+
 	class UStaticMeshComponent* GetTriangleMeshComp() const { return TriangleMeshComp; }
 
 	UPROPERTY(EditAnywhere, Category = "Components")
@@ -118,6 +120,8 @@ private:
 		int32 KeysAmount;
 	UPROPERTY(EditAnywhere, Category = "Player Settings|Widgets")
 		TSubclassOf<class UUserWidget> HUDWidgetClass;
+	UPROPERTY(EditAnywhere, Category = "Player Settings|Widgets")
+		TSubclassOf<class UAwardDescriptionWidget> ItemDescriptionWidgetClass;
 	UPROPERTY(EditAnywhere, Category = "Room Settings|Camera")
 		float CameraChangeLocationTime = 0.4f;
 
@@ -163,4 +167,5 @@ private:
 	// Math
 	float easeInOutCubic(float t);
 
+	APlayerController* TrianglePawnController;
 };

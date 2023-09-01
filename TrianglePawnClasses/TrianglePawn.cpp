@@ -13,6 +13,7 @@
 
 #include "TheBindingOfTriangle/TrianglePawnClasses/Bullet.h"
 #include "TheBindingOfTriangle/Widgets/HUDWidget.h"
+#include "TheBindingOfTriangle/Widgets/AwardDescriptionWidget.h"
 #include "TheBindingOfTriangle/Interfaces/TakeItemInterface.h"
 #include "TheBindingOfTriangle/Items/ExplosiveBomb.h"
 #include "TheBindingOfTriangle/BulletClasses/BulletComponent.h"
@@ -42,6 +43,8 @@ ATrianglePawn::ATrianglePawn()
 void ATrianglePawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	TrianglePawnController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 
 	SetTriangleCamera();
 	MakeHudWidget();
@@ -179,7 +182,6 @@ void ATrianglePawn::TakeDamage(float Damage, float Impulse, FVector ImpulseDir)
 #pragma region ////////////////// WIDGETS //////////////////
 void ATrianglePawn::MakeHudWidget()
 {
-	APlayerController* TrianglePawnController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (HUDWidgetClass && TrianglePawnController)
 	{
 		HudWidget = Cast<UHUDWidget>(CreateWidget(TrianglePawnController, HUDWidgetClass));
@@ -291,6 +293,17 @@ void ATrianglePawn::AddSlotForHeart(int32 SlotsToAdd, FString HeartName)
 	HudWidget->CurrentHearts = CurrentHearts;
 	HudWidget->CallAddHeartToTile();
 }
+
+void ATrianglePawn::SpawnItemDescriptionWidget(FText Description)
+{
+	if (ItemDescriptionWidgetClass == nullptr || TrianglePawnController == nullptr) return;
+
+	UAwardDescriptionWidget* AwardWidget = Cast<UAwardDescriptionWidget>(CreateWidget(TrianglePawnController, ItemDescriptionWidgetClass));
+	if (AwardWidget == nullptr) return;
+	AwardWidget->AddToViewport();
+	AwardWidget->SetItemDescriptionNewText(Description);
+}
+
 #pragma endregion
 
 void ATrianglePawn::SetTriangleCamera()

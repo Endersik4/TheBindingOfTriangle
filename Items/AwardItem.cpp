@@ -33,6 +33,8 @@ void AAwardItem::RotateAwardMesh(float Delta)
 
 void AAwardItem::TakeItem(ATrianglePawn* TrianglePawn)
 {
+	TrianglePawn->SpawnItemDescriptionWidget(AwardDescription);
+
 	if (bAddNewSlotForHeart == true)
 	{
 		TrianglePawn->AddSlotForHeart(SlotAmount, HeartNameToAddSlot);

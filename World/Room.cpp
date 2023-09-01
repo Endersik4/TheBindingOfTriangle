@@ -119,7 +119,7 @@ void  ARoom::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 
 	if (ListOfEnemies.Num() == 0) return;
 
-	bool bEmptyRoom = FMath::FRandRange(0.f, 100.f) < 50.f ? true : false;
+	bool bEmptyRoom = FMath::FRandRange(0.f, 100.f) < 20.f ? true : false;
 	if (bEmptyRoom == true)
 	{
 		bShouldSpawnEnemies = false;
