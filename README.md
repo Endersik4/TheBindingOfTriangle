@@ -1,5 +1,7 @@
 # TheBindingOfTriangle
-A side project I am currently working on to take a break from MarineRunner - The Binding Of Isaac, but in my way
+A side project I'm currently working on to take a break from MarineRunner - The Binding Of Isaac, but in my way
+I wanted to create this game because of the procedural generation of basements and minimap, which I haven't done before.
+The procedural generation of rooms is done, and now it's time for the minimap (as in Isaac).
 
 Gameplay that shows current status (02.09.2023)
 (The game is not finished and far from it)
