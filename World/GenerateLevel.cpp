@@ -5,6 +5,7 @@
 #include "Kismet/KismetMathLibrary.h"
 
 #include "TheBindingOfTriangle/World/Room.h"
+#include "TheBindingOfTriangle/TrianglePawnClasses/MinimapActor.h"
 
 // Sets default values
 AGenerateLevel::AGenerateLevel()
@@ -26,6 +27,7 @@ void AGenerateLevel::BeginPlay()
 	SpawnSpecificRoom(ERoomType::ERT_Shop, EDoorType::EDT_Shop);
 
 	SpawnRooms();
+	if (MinimapActor) MinimapActor->SpawnMinimap(AllRoomsData);
 }
 
 // Called every frame
@@ -233,6 +235,7 @@ void AGenerateLevel::SpawnRooms()
 		if (SpawnedRoom == nullptr) continue;
 
 		SpawnedRoom->SetRoomData(*FoundRoom);
+		SpawnedRoom->SetMinimapActor(MinimapActor);
 		SpawnedRoom->FinishSpawning(RoomTransfrom);
 	}
 }

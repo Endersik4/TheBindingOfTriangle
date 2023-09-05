@@ -30,6 +30,8 @@ public:
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
+		class AMinimapActor* MinimapActor;
+	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
 		int32 HowManyRoutes = 5;
 	UPROPERTY(EditAnywhere, Category = "Room Spawner settings")
 		int32 HowManyRooms = 3;

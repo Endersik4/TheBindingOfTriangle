@@ -28,6 +28,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void SetRoomData(const FRoomStruct& Room) { RoomData = Room; }
+	void SetMinimapActor(class AMinimapActor* NewMinimapActor) { MinimapActor = NewMinimapActor; }
 	void AddHowManyEnemisSet(int32 Add);
 
 	UFUNCTION()
@@ -75,6 +76,9 @@ private:
 	// Spawn enemies after some time
 	FTimerHandle TimeToSpawnEnemiesHandle;
 	void SpawnEnemiesAfterTime();
+
+	// Minimap
+	class AMinimapActor* MinimapActor;
 
 	// Spawn Enemies when first entered the room
 	int32 HowManyEnemiesLeft;

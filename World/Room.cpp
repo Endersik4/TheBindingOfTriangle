@@ -11,6 +11,7 @@
 #include "TheBindingOfTriangle/TrianglePawnClasses/TrianglePawn.h"
 #include "TheBindingOfTriangle/World/Door.h"
 #include "TheBindingOfTriangle/EnemyClasses/BaseEnemy.h"
+#include "TheBindingOfTriangle/TrianglePawnClasses/MinimapActor.h"
 
 // Sets default values
 ARoom::ARoom()
@@ -105,19 +106,19 @@ FTransform ARoom::GetProperTransform(int32 Index)
 }
 
 #pragma region ///////////////// ACTIVATE ROOM BOX ///////////////////
-
-
 void  ARoom::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (TrianglePawn == nullptr) return;
 	TrianglePawn->ChangeCameraRoom(true, CameraLocationBoxComp->GetComponentLocation());
+
+	if (MinimapActor) MinimapActor->ChangeCurrentRoom(RoomData.Location);
 
 	// Change Player location so he cant stuck in between doors
 	FVector DirForImpulse = UKismetMathLibrary::FindLookAtRotation(TrianglePawn->GetActorLocation(), GetActorLocation()).Vector();
 	DirForImpulse.Z = 0.f;
 	TrianglePawn->SetActorLocation(DirForImpulse * 120.f + TrianglePawn->GetActorLocation());
 
-	if (ListOfEnemies.Num() == 0) return;
+	if (ListOfEnemies.Num() == 0 || RoomData.RoomType == ERT_Spawn) return;
 
 	bool bEmptyRoom = FMath::FRandRange(0.f, 100.f) < 20.f ? true : false;
 	if (bEmptyRoom == true)
