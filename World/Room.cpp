@@ -133,6 +133,7 @@ void  ARoom::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 void  ARoom::OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	UE_LOG(LogTemp, Warning, TEXT("OFF"));
+	if (MinimapActor) MinimapActor->SetInitialRoomColor(RoomData.RoomType);
 }
 
 #pragma endregion

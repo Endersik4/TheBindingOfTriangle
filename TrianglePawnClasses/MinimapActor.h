@@ -27,16 +27,18 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void SpawnMinimap(const TMap<FVector, FRoomStruct> & AllRooms);
+	void SpawnMinimapSpriteRoom(const FVector  &RealRoomLocation);
 	void ChangeCurrentRoom(FVector RealRoomLocation);
+	void SetInitialRoomColor(const ERoomType& InitialRoomType);
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Components")
+		class USceneCaptureComponent2D* MinimapSceneCapture;
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
-		USceneComponent* MainSceneComponent;
-	UPROPERTY(EditDefaultsOnly, Category = "Components")
-		class USceneCaptureComponent2D* MinimapSceneCapture;
+		class UBoxComponent* BoxMainComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings")
-		FVector2D LocationDivider = FVector2D(10.f, 16.f);
+		FVector2D LocationDivider = FVector2D(23.f, 28.f);
 	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings")
 		UPaperSprite* RoomPaperSprite;
 	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings")
@@ -49,6 +51,8 @@ private:
 		FColor ShopRoomColor = FColor::Magenta;
 	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings")
 		FColor SpawnRoomColor = FColor::Green;
+	UPROPERTY(EditAnywhere, Category = "Minimap Settings")
+		float SceneCaptureChangeLocationTime = 0.4f;
 
 	TMap<FVector, FRoomStruct> AllRoomsData;
 	TMap<FVector, class APaperSpriteActor*> AllMinimapRooms;
@@ -57,10 +61,20 @@ private:
 	FColor& GetProperRoomColor(const ERoomType &RoomType);
 	FVector TransformRoomLocation(const FVector & RealRoomLocation);
 
-	// Move camera
-	bool bChangeCameraLocation;
-	float CameraLocationTimeElapsed;
-	FVector CameraStartPosition;
-	FVector CameraEndPosition;
-	void SmoothCameraLocation(float Delta);
+	//
+	class APaperSpriteActor* MinimapNextRoom;
+
+	FColor InitialRoomColor;
+
+	// Move Scene Capture
+	FColor MinimapRoomColor;
+	bool bChangeSceneCaptureLocation;
+	float SceneCaptureLocationTimeElapsed;
+	FVector SceneCaptureStartPosition;
+	FVector SceneCaptureEndPosition;
+	void ChangeMinimapRoom(bool bChangeLoc, FVector CameraLocation);
+	void SmoothSceneCaptureLocation(float Delta);
+
+	// Math
+	float easeInOutCubic(float t);
 };
