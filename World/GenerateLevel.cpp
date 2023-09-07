@@ -27,7 +27,11 @@ void AGenerateLevel::BeginPlay()
 	SpawnSpecificRoom(ERoomType::ERT_Shop, EDoorType::EDT_Shop);
 
 	SpawnRooms();
-	if (MinimapActor) MinimapActor->SpawnMinimap(AllRoomsData);
+	if (MinimapActor)
+	{
+		MinimapActor->SpawnMinimap(AllRoomsData);
+		MinimapActor->ChangeCurrentRoom(SpawnRoomLocation);
+	}
 }
 
 // Called every frame
@@ -49,13 +53,14 @@ void AGenerateLevel::GenerateRoomsLayout()
 	SpawnRoomsSeed.Reset();
 	if (bDrawDebugRoomLayout == false) SpawnRoomsSeed.GenerateNewSeed();
 
-	AllRoomsData.Add(GetActorLocation(), FRoomStruct(GetActorLocation(), ERT_Spawn));
+	SpawnRoomLocation = GetActorLocation();
+	AllRoomsData.Add(SpawnRoomLocation, FRoomStruct(SpawnRoomLocation, ERT_Spawn));
 
-	if (bDrawDebugRoomLayout == true) DrawDebugBox(GetWorld(), GetActorLocation(), FVector(200.f, 200.f, 0.f), FColor::Blue, true);
+	if (bDrawDebugRoomLayout == true) DrawDebugBox(GetWorld(), SpawnRoomLocation, FVector(200.f, 200.f, 0.f), FColor::Blue, true);
 
 	for (int32 i = 0; i != HowManyRoutes; i++)
 	{
-		FVector NextRoomLocation = GetActorLocation();
+		FVector NextRoomLocation = SpawnRoomLocation;
 		int32 CantRoomSpawnCounter = 0;
 		int32 DistanceFromStartRoom = 0; // In Rooms (1 - one room, 4 - four rooms...)
 

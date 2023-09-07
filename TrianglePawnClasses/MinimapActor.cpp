@@ -39,44 +39,12 @@ void AMinimapActor::Tick(float DeltaTime)
 void AMinimapActor::SpawnMinimap(const TMap<FVector, FRoomStruct>& AllRooms)
 {
 	AllRoomsData = AllRooms;
-
-	/*
-	if (RoomPaperSprite == nullptr) return;
-	AllRoomsData = AllRooms;
-
-	TArray<FRoomStruct> RoomsData;
-	AllRoomsData.GenerateValueArray(RoomsData);
-
-	for (const FRoomStruct& Room : RoomsData)
-	{
-		FVector Location = TransformRoomLocation(Room.Location);
-
-		const FColor & SpriteRoomColor = GetProperRoomColor(Room.RoomType);
-
-		APaperSpriteActor* SpawnedSpriteActor = GetWorld()->SpawnActor<APaperSpriteActor>(APaperSpriteActor::StaticClass(), Location, FRotator(0.f, 90.f, 90.f));
-		if (SpawnedSpriteActor == nullptr) continue;
-
-		if (Room.RoomType == ERT_Spawn) CurrentMinimapRoom = SpawnedSpriteActor;
-		AllMinimapRooms.Add(Location, SpawnedSpriteActor);
-
-		SpawnedSpriteActor->SetActorScale3D(FVector(0.1f));
-		SpawnedSpriteActor->GetRenderComponent()->SetMobility(EComponentMobility::Movable);
-		SpawnedSpriteActor->GetRenderComponent()->SetSprite(RoomPaperSprite);
-		SpawnedSpriteActor->GetRenderComponent()->SetSpriteColor(SpriteRoomColor);
-	}*/
 }
 
 void AMinimapActor::SpawnMinimapSpriteRoom(const FVector& RealRoomLocation)
 {
 	TArray<FVector> RoomNeighboursLocation;
-	RoomNeighboursLocation.Add(RealRoomLocation);
-	for (int i = 0; i != 4; i++)
-	{
-		if (i == 0) RoomNeighboursLocation.Add(RealRoomLocation + FVector(1360.f, 0.f, 0.f));
-		else if (i == 1) RoomNeighboursLocation.Add(RealRoomLocation + FVector(-1360.f, 0.f, 0.f));
-		else if (i == 2) RoomNeighboursLocation.Add(RealRoomLocation + FVector(0, 2440.f, 0.f));
-		else RoomNeighboursLocation.Add(RealRoomLocation + FVector(0.f, -2440.f, 0.f));
-	}
+	GetRoomNeighboursLocation(RoomNeighboursLocation, RealRoomLocation);
 
 	for (int i = 0; i != 5; i++)
 	{
@@ -91,7 +59,7 @@ void AMinimapActor::SpawnMinimapSpriteRoom(const FVector& RealRoomLocation)
 		FVector Location = TransformRoomLocation(CurrMinimapRoom->Location);
 		if (AllMinimapRooms.Find(Location)) continue;
 
-		FColor& SpriteRoomColor = GetProperRoomColor(CurrMinimapRoom->RoomType);
+		FColor SpriteRoomColor = GetProperRoomColor(CurrMinimapRoom->RoomType);
 
 		APaperSpriteActor* SpawnedSpriteActor = GetWorld()->SpawnActor<APaperSpriteActor>(APaperSpriteActor::StaticClass(), Location, FRotator(0.f, 90.f, 90.f));
 		if (SpawnedSpriteActor == nullptr) continue;
@@ -102,10 +70,24 @@ void AMinimapActor::SpawnMinimapSpriteRoom(const FVector& RealRoomLocation)
 		}
 		AllMinimapRooms.Add(Location, SpawnedSpriteActor);
 
+		if (CurrMinimapRoom->RoomType == ERT_Normal) SpriteRoomColor = NotDiscoveredRoomColor;
+
 		SpawnedSpriteActor->SetActorScale3D(FVector(0.1f));
 		SpawnedSpriteActor->GetRenderComponent()->SetMobility(EComponentMobility::Movable);
 		SpawnedSpriteActor->GetRenderComponent()->SetSprite(RoomPaperSprite);
 		SpawnedSpriteActor->GetRenderComponent()->SetSpriteColor(SpriteRoomColor);
+	}
+}
+
+void AMinimapActor::GetRoomNeighboursLocation(TArray<FVector>& RoomNeighboursLocation, FVector RealRoomLocation)
+{
+	RoomNeighboursLocation.Add(RealRoomLocation);
+	for (int i = 0; i != 4; i++)
+	{
+		if (i == 0) RoomNeighboursLocation.Add(RealRoomLocation + FVector(1360.f, 0.f, 0.f));
+		else if (i == 1) RoomNeighboursLocation.Add(RealRoomLocation + FVector(-1360.f, 0.f, 0.f));
+		else if (i == 2) RoomNeighboursLocation.Add(RealRoomLocation + FVector(0, 2440.f, 0.f));
+		else RoomNeighboursLocation.Add(RealRoomLocation + FVector(0.f, -2440.f, 0.f));
 	}
 }
 
@@ -114,7 +96,6 @@ FColor& AMinimapActor::GetProperRoomColor(const ERoomType& RoomType)
 	if (RoomType == ERT_Award) return AwardRoomColor;
 	else if (RoomType == ERT_Boss) return BossRoomColor;
 	else if (RoomType == ERT_Shop) return ShopRoomColor;
-	else if (RoomType == ERT_Spawn) return SpawnRoomColor;
 	else return NormalRoomColor;
 }
 
@@ -134,6 +115,7 @@ void AMinimapActor::ChangeCurrentRoom(FVector RealRoomLocation)
 	APaperSpriteActor* FoundActor = *AllMinimapRooms.Find(Location);
 	if (FoundActor == nullptr || FoundActor == CurrentMinimapRoom) return;
 
+	FoundActor->GetRenderComponent()->SetSpriteColor(CurrentRoomColor);
 	MinimapNextRoom = FoundActor;
 	ChangeMinimapRoom(true, Location);
 }
@@ -165,10 +147,10 @@ void AMinimapActor::SmoothSceneCaptureLocation(float Delta)
 	FVector NewLocation = FMath::Lerp(SceneCaptureStartPosition, SceneCaptureEndPosition, t);
 	MinimapSceneCapture->SetRelativeLocation(NewLocation);
 
-	FLinearColor NewCurrRoomColor = UKismetMathLibrary::LinearColorLerp(SpawnRoomColor, InitialRoomColor, t);
+	FLinearColor NewCurrRoomColor = UKismetMathLibrary::LinearColorLerp(CurrentRoomColor, InitialRoomColor, t);
 	CurrentMinimapRoom->GetRenderComponent()->SetSpriteColor(NewCurrRoomColor);
 
-	FLinearColor NewNextRoomColor = UKismetMathLibrary::LinearColorLerp(MinimapRoomColor, SpawnRoomColor, t);
+	FLinearColor NewNextRoomColor = UKismetMathLibrary::LinearColorLerp(MinimapRoomColor, CurrentRoomColor, t);
 	MinimapNextRoom->GetRenderComponent()->SetSpriteColor(NewNextRoomColor);
 
 	if (t >= 1.f)

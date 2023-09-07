@@ -160,22 +160,28 @@ void ARoom::SpawnEnemies()
 {
 	int32 NumOfEnemies = FMath::RandRange(RangeOfEnemiesToSpawn.GetLowerBoundValue(), RangeOfEnemiesToSpawn.GetUpperBoundValue());
 	
-	FVector RandLocation;
-	RandLocation.Z = 98.f;
 	for (int i = 0; i != NumOfEnemies; i++)
 	{
 		int32 EnemyChoice = FMath::RandRange(0, ListOfEnemies.Num() - 1);
-		RandLocation.X = FMath::RandRange(-540.f, 540.f);
-		RandLocation.Y = FMath::RandRange(-1100.f, 1100.f);
-		RandLocation = UKismetMathLibrary::TransformLocation(GetActorTransform(), RandLocation);
+		FVector RandLocation = PickRandomLocationForEnemy();
+
 		ABaseEnemy* SpawnedEnemy = GetWorld()->SpawnActor<ABaseEnemy>(ListOfEnemies[EnemyChoice], RandLocation, FRotator(0.f, 45.f, 0.f));
-		if (SpawnedEnemy)
-		{
-			SpawnedEnemy->SetCurrentRoom(this);
-			if (SpawnedEnemy->GetEnemyActionWhenSpawned() != ESA_BouncesOfWalls) SpawnedEnemy->SetActorRotation(FRotator(0.f));
-			HowManyEnemiesLeft++;
-		}
+		if (SpawnedEnemy == nullptr) continue;
+
+		SpawnedEnemy->SetCurrentRoom(this);
+		if (SpawnedEnemy->GetEnemyActionWhenSpawned() != ESA_BouncesOfWalls) SpawnedEnemy->SetActorRotation(FRotator(0.f));
+		HowManyEnemiesLeft++;
 	}
+}
+
+FVector ARoom::PickRandomLocationForEnemy()
+{
+	FVector RandLocation;
+	RandLocation.Z = 98.f;
+	RandLocation.X = FMath::RandRange(-540.f, 540.f);
+	RandLocation.Y = FMath::RandRange(-1100.f, 1100.f);
+	RandLocation = UKismetMathLibrary::TransformLocation(GetActorTransform(), RandLocation);
+	return RandLocation;
 }
 
 void ARoom::AddHowManyEnemisSet(int32 Add)

@@ -55,6 +55,8 @@ private:
 	UPROPERTY(VisibleAnywhere)
 		TMap<FVector, FRoomStruct> AllRoomsData;
 
+	FVector SpawnRoomLocation;
+
 	TArray<FVector> EndRoomsLocations;
 
 	bool CanRoomBeAtGivenLoc(FVector& RoomLocation, int32& Index, int32& StartRoomDistance, int32& SpawnRoomCounter);

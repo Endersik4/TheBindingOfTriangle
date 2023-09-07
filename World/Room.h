@@ -75,6 +75,7 @@ private:
 
 	// Spawn enemies after some time
 	FTimerHandle TimeToSpawnEnemiesHandle;
+	FVector PickRandomLocationForEnemy();
 	void SpawnEnemiesAfterTime();
 
 	// Minimap

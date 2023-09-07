@@ -41,16 +41,18 @@ private:
 		FVector2D LocationDivider = FVector2D(23.f, 28.f);
 	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings")
 		UPaperSprite* RoomPaperSprite;
-	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings")
+	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings|Minimap Room Colors")
+		FColor CurrentRoomColor = FColor::Green;
+	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings|Minimap Room Colors")
+		FColor NotDiscoveredRoomColor = FColor::Silver;
+	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings|Minimap Room Colors")
 		FColor NormalRoomColor = FColor::Blue;
-	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings")
+	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings|Minimap Room Colors")
 		FColor BossRoomColor = FColor::Red;
-	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings")
+	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings|Minimap Room Colors")
 		FColor AwardRoomColor = FColor::Yellow;
-	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings")
+	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings|Minimap Room Colors")
 		FColor ShopRoomColor = FColor::Magenta;
-	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings")
-		FColor SpawnRoomColor = FColor::Green;
 	UPROPERTY(EditAnywhere, Category = "Minimap Settings")
 		float SceneCaptureChangeLocationTime = 0.4f;
 
@@ -63,6 +65,7 @@ private:
 
 	//
 	class APaperSpriteActor* MinimapNextRoom;
+	void GetRoomNeighboursLocation(TArray<FVector>& RoomNeighboursLocation, FVector RealRoomLocation);
 
 	FColor InitialRoomColor;
 
