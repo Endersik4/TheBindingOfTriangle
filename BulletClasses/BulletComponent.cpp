@@ -108,13 +108,13 @@ void UBulletComponent::DirectionForBullets(FRotator MeshRelativeRotation)
 				bShootLaser = true;
 			}
 		}	
-		else SpawnBullet(BulletLocation, BulletTrajectory);
+		else SpawnBullet(BulletLocation, BulletTrajectory, MeshRelativeRotation);
 	}
 }
 
-void UBulletComponent::SpawnBullet(FVector StartLocation, FVector DirForBullet)
+void UBulletComponent::SpawnBullet(FVector StartLocation, FVector DirForBullet, FRotator BulletRotation)
 {
-	ABullet* BulletActor = GetWorld()->SpawnActor<ABullet>(Bullet.BulletClass, StartLocation, GetOwner()->GetActorRotation());
+	ABullet* BulletActor = GetWorld()->SpawnActor<ABullet>(Bullet.BulletClass, StartLocation, BulletRotation - FRotator(0.f,90.f,0.f));
 	if (BulletActor == nullptr) return;
 
 	BulletActor->SetTrajectoryBullet(DirForBullet);

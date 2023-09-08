@@ -197,6 +197,7 @@ void ATrianglePawn::RestartHudWidgetVariables()
 	HudWidget->CurrentHearts = CurrentHearts;
 	HudWidget->CallAddHeartToTile();
 	HudWidget->GetItemsAmount();
+	HudWidget->SetBulletIconImage(BulletComponent->GetBulletData().BulletIcon);
 }
 #pragma endregion
 

@@ -93,6 +93,8 @@ public:
 
 	void SpawnItemDescriptionWidget(FText Description);
 
+	void RestartHudWidgetVariables();
+
 	class UStaticMeshComponent* GetTriangleMeshComp() const { return TriangleMeshComp; }
 
 	UPROPERTY(EditAnywhere, Category = "Components")
@@ -153,7 +155,6 @@ private:
 	// Widgets
 	class UHUDWidget* HudWidget;
 	void MakeHudWidget();
-	void RestartHudWidgetVariables();
 
 	// Camera
 	void SetTriangleCamera();

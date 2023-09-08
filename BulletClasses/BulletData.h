@@ -32,6 +32,8 @@ struct FBulletStruct {
 		float Impulse = 1300.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		TSubclassOf<class ABullet> BulletClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
+		UTexture2D* BulletIcon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Settings")
 		TEnumAsByte<ETypeOfBullet> TypeOfBullet = ETypeOfBullet::ETB_Bullet;

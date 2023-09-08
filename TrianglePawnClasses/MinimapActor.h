@@ -26,10 +26,12 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void SpawnMinimap(const TMap<FVector, FRoomStruct> & AllRooms);
-	void SpawnMinimapSpriteRoom(const FVector  &RealRoomLocation);
-	void ChangeCurrentRoom(FVector RealRoomLocation);
+	void SetAllRoomsData(const TMap<FVector, FRoomStruct>& AllRooms) { AllRoomsData = AllRooms; }
+	void SetDistanceBetweenRooms(FVector2D NewDistance) { DistanceBetweenRooms = NewDistance; }
 	void SetInitialRoomColor(const ERoomType& InitialRoomType);
+
+	void MakeRoomMinimapWithNeighbours(const FVector  &RealRoomLocation);
+	void PlayerHasMovedToNextRoom(FVector RealRoomLocation);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		class USceneCaptureComponent2D* MinimapSceneCapture;
@@ -41,18 +43,20 @@ private:
 		FVector2D LocationDivider = FVector2D(23.f, 28.f);
 	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings")
 		UPaperSprite* RoomPaperSprite;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings|Minimap Room Colors")
 		FColor CurrentRoomColor = FColor::Green;
 	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings|Minimap Room Colors")
-		FColor NotDiscoveredRoomColor = FColor::Silver;
+		FColor NotDiscoveredRoomColor = FColor::Blue;
 	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings|Minimap Room Colors")
-		FColor NormalRoomColor = FColor::Blue;
+		FColor NormalRoomColor = FColor::Cyan;
 	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings|Minimap Room Colors")
 		FColor BossRoomColor = FColor::Red;
 	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings|Minimap Room Colors")
 		FColor AwardRoomColor = FColor::Yellow;
 	UPROPERTY(EditDefaultsOnly, Category = "Minimap Settings|Minimap Room Colors")
 		FColor ShopRoomColor = FColor::Magenta;
+
 	UPROPERTY(EditAnywhere, Category = "Minimap Settings")
 		float SceneCaptureChangeLocationTime = 0.4f;
 
@@ -60,23 +64,29 @@ private:
 	TMap<FVector, class APaperSpriteActor*> AllMinimapRooms;
 	class APaperSpriteActor* CurrentMinimapRoom;
 
-	FColor& GetProperRoomColor(const ERoomType &RoomType);
+	// Transform Real Room Location to local of this actor
 	FVector TransformRoomLocation(const FVector & RealRoomLocation);
 
 	//
+	void SpawnRoomSprite(const FVector& SpawnLocation, const FRoomStruct* RoomData, bool bFirstMinimapRoom);
+	FColor& GetProperRoomColor(const ERoomType& RoomType, bool bFirstTimeSpawned = false);
+
 	class APaperSpriteActor* MinimapNextRoom;
+	FVector2D DistanceBetweenRooms;
 	void GetRoomNeighboursLocation(TArray<FVector>& RoomNeighboursLocation, FVector RealRoomLocation);
 
-	FColor InitialRoomColor;
+	FColor OriginalRoomColor;
 
 	// Move Scene Capture
-	FColor MinimapRoomColor;
-	bool bChangeSceneCaptureLocation;
+	bool bChangeCurrentMinimapRoom;
 	float SceneCaptureLocationTimeElapsed;
+	FColor NextRoomColor;
 	FVector SceneCaptureStartPosition;
 	FVector SceneCaptureEndPosition;
-	void ChangeMinimapRoom(bool bChangeLoc, FVector CameraLocation);
-	void SmoothSceneCaptureLocation(float Delta);
+
+	void MoveSceneCapture(bool bChangeLoc, FVector CameraLocation);
+	void MoveEndedCurrentMinimapRoom();
+	void MoveCurrentMinimapRoom(float Delta);
 
 	// Math
 	float easeInOutCubic(float t);

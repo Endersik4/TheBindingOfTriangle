@@ -27,11 +27,7 @@ void AGenerateLevel::BeginPlay()
 	SpawnSpecificRoom(ERoomType::ERT_Shop, EDoorType::EDT_Shop);
 
 	SpawnRooms();
-	if (MinimapActor)
-	{
-		MinimapActor->SpawnMinimap(AllRoomsData);
-		MinimapActor->ChangeCurrentRoom(SpawnRoomLocation);
-	}
+	SetMinimapVariables();
 }
 
 // Called every frame
@@ -277,6 +273,15 @@ FVector AGenerateLevel::FindFurthestRoom()
 }
 
 #pragma endregion
+
+void AGenerateLevel::SetMinimapVariables()
+{
+	if (MinimapActor == nullptr) return;
+
+	MinimapActor->SetAllRoomsData(AllRoomsData);
+	MinimapActor->SetDistanceBetweenRooms(FVector2D(DistanceBetweenRooms_X, DistanceBetweenRooms_Y));
+	MinimapActor->PlayerHasMovedToNextRoom(SpawnRoomLocation);
+}
 
 FRoomStruct* AGenerateLevel::PickRandomRoom(TArray<FVector> RoomsLocations)
 {

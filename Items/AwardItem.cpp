@@ -60,6 +60,9 @@ void AAwardItem::TakeItem(ATrianglePawn* TrianglePawn)
 		else if (Action == EAA_ReplaceBulletClass)
 		{
 			TrianglePawn->BulletComponent->GetBulletData().BulletClass = BulletData.BulletClass;
+			TrianglePawn->BulletComponent->GetBulletData().BulletIcon = BulletData.BulletIcon;
+			TrianglePawn->RestartHudWidgetVariables();
+			
 		}
 		else if (Action == EAA_ReplaceBulletType)
 		{

@@ -54,7 +54,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
 		FBulletStruct Bullet;
 
-	void SpawnBullet(FVector StartLocation, FVector DirForBullet);
+	void SpawnBullet(FVector StartLocation, FVector DirForBullet, FRotator BulletRotation);
 
 	// Laser
 	bool bShootLaser;

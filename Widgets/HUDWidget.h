@@ -29,8 +29,14 @@ public:
 		class UTextBlock* BombsAmount;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 		class UTextBlock* KeysAmount;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		class UImage* BulletIconImage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		class UImage* MinimapImage;
+	
 	TArray<FHeartStruct> CurrentHearts;
+
+	void SetBulletIconImage(UTexture2D* NewBulletIcon);
 
 	void CallAddHeartToTile() { AddHeartToTile(); }
 

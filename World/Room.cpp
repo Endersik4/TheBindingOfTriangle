@@ -111,7 +111,7 @@ void  ARoom::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 	if (TrianglePawn == nullptr) return;
 	TrianglePawn->ChangeCameraRoom(true, CameraLocationBoxComp->GetComponentLocation());
 
-	if (MinimapActor) MinimapActor->ChangeCurrentRoom(RoomData.Location);
+	if (MinimapActor) MinimapActor->PlayerHasMovedToNextRoom(RoomData.Location);
 
 	// Change Player location so he cant stuck in between doors
 	FVector DirForImpulse = UKismetMathLibrary::FindLookAtRotation(TrianglePawn->GetActorLocation(), GetActorLocation()).Vector();

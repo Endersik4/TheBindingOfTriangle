@@ -52,6 +52,11 @@ void UHUDWidget::AddHeartToTile()
 	}
 }
 
+void UHUDWidget::SetBulletIconImage(UTexture2D* NewBulletIcon)
+{
+	BulletIconImage->SetBrushFromTexture(NewBulletIcon);
+}
+
 void UHUDWidget::GetItemsAmount()
 {
 	if (TrianglePawn == nullptr) return;

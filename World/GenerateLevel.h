@@ -68,6 +68,9 @@ private:
 	void SpawnSpecificRoom(ERoomType RoomTypeToChoose, EDoorType DoorTypeToChoose, FColor DebugColor = FColor::Yellow);
 	FVector FindFurthestRoom();
 
+	// Minimap
+	void SetMinimapVariables();
+
 	FRoomStruct* PickRandomRoom(TArray<FVector> RoomsLocations);
 
 };

@@ -135,8 +135,8 @@ void ABullet::MovementBullet(float Delta)
 
 void ABullet::SetScaleWhileDroppingDown(float Delta)
 {
-	FVector nextScale = BulletMeshComp->GetRelativeScale3D() - (0.25 * Delta);
-	float minScale = FMath::Clamp(nextScale.X, 0.005f, BulletScale.X);
+	FVector nextScale = BulletMeshComp->GetRelativeScale3D() - (0.3f * Delta);
+	float minScale = FMath::Clamp(nextScale.X, 0.001f, BulletScale.X);
 
 	BulletMeshComp->SetRelativeScale3D(FVector(minScale));
 }
