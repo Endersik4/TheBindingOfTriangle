@@ -45,8 +45,9 @@ struct FRoomStruct {
 		int32 DistanceFromStartRoom = 0;
 	UPROPERTY(EditAnywhere, Category = "Struct Variables")
 		int32 AmountOfDoors = 0;
+	// 1 - Top, 2 - Bottom 3 - Right, 4 - left
 	UPROPERTY(VisibleAnywhere, Category = "Struct Variables")
-		TEnumAsByte<EDoorType> DoorsType[4] = { EDT_None, EDT_None, EDT_None, EDT_None }; // 1 - Top, 2 - Bottom 3 - Right, 4 - left
+		TEnumAsByte<EDoorType> DoorsType[4] = { EDT_None, EDT_None, EDT_None, EDT_None }; 
 
 	FRoomStruct(FVector NewLoc = FVector(0.f), ERoomType Type = ERT_Normal, int32 Distance = 0, int32 Doors = 0) : Location(NewLoc), RoomType(Type), DistanceFromStartRoom(Distance), AmountOfDoors(Doors)
 	{

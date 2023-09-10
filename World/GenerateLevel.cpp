@@ -114,52 +114,53 @@ bool AGenerateLevel::CanRoomBeAtGivenLoc(FVector& RoomLocation, int32& Index, in
 	return true;
 }
 
-bool AGenerateLevel::CheckNeighbours(const FVector& GridLoc, bool bAddDoors, FRoomStruct* GridRoom, bool bChangeTypeNeighboursDoor)
+bool AGenerateLevel::CheckNeighbours(const FVector& CenterRoomLoc, bool bAddDoors, FRoomStruct* CenterRoom, bool bChangeTypeNeighboursDoor)
 {
 	int32 Neighbours = 0;
-	FRoomStruct * FoundRoom = AllRoomsData.Find(GridLoc + GetActorForwardVector() * DistanceBetweenRooms_X);
-	if (FoundRoom) {
-		Neighbours++;
-		if (bAddDoors) GridRoom->DoorsType[0] = EDT_Room;
-		if (bChangeTypeNeighboursDoor && GridRoom) FoundRoom->DoorsType[1] = GridRoom->DoorsType[0];
-	}
 
-	FoundRoom = AllRoomsData.Find(GridLoc + -GetActorForwardVector() * DistanceBetweenRooms_X);
-	if (FoundRoom) {
-		Neighbours++;
-		if (bAddDoors) GridRoom->DoorsType[1] = EDT_Room;
-		if (bChangeTypeNeighboursDoor && GridRoom) FoundRoom->DoorsType[0] = GridRoom->DoorsType[1];
-	}
-
-	FoundRoom = AllRoomsData.Find(GridLoc + GetActorRightVector() * DistanceBetweenRooms_Y);
-	if (FoundRoom) {
-		Neighbours++;
-		if (bAddDoors)  GridRoom->DoorsType[2] = EDT_Room;
-		if (bChangeTypeNeighboursDoor && GridRoom) FoundRoom->DoorsType[3] = GridRoom->DoorsType[2];
-	}
-
-	FoundRoom = AllRoomsData.Find(GridLoc + -GetActorRightVector() * DistanceBetweenRooms_Y);
-	if (FoundRoom) {
-		Neighbours++;
-		if (bAddDoors) GridRoom->DoorsType[3] = EDT_Room;
-		if (bChangeTypeNeighboursDoor && GridRoom) FoundRoom->DoorsType[2] = GridRoom->DoorsType[3];
-	}
+	Neighbours += DoesFoundNeighbour(CenterRoomLoc + GetActorForwardVector() * DistanceBetweenRooms_X, 0, CenterRoom, bAddDoors, bChangeTypeNeighboursDoor);
+	Neighbours += DoesFoundNeighbour(CenterRoomLoc + -GetActorForwardVector() * DistanceBetweenRooms_X, 1, CenterRoom, bAddDoors, bChangeTypeNeighboursDoor);
+	Neighbours += DoesFoundNeighbour(CenterRoomLoc + GetActorRightVector() * DistanceBetweenRooms_Y,  2, CenterRoom, bAddDoors, bChangeTypeNeighboursDoor);
+	Neighbours += DoesFoundNeighbour(CenterRoomLoc + -GetActorRightVector() * DistanceBetweenRooms_Y, 3, CenterRoom, bAddDoors, bChangeTypeNeighboursDoor);
 
 	if (bChangeTypeNeighboursDoor) return true;
 
 	if (bAddDoors)
 	{
-		GridRoom->AmountOfDoors = Neighbours;
+		CenterRoom->AmountOfDoors = Neighbours;
 		return true; // There is no need to do the rest of the function
 	}
 
 	// Corners
-	if (AllRoomsData.Find(GridLoc + (GetActorForwardVector() * DistanceBetweenRooms_X + GetActorRightVector() * DistanceBetweenRooms_Y))) Neighbours++;
-	if (AllRoomsData.Find(GridLoc + (GetActorForwardVector() * DistanceBetweenRooms_X + -GetActorRightVector() * DistanceBetweenRooms_Y))) Neighbours++;
-	if (AllRoomsData.Find(GridLoc + (-GetActorForwardVector() * DistanceBetweenRooms_X + GetActorRightVector() * DistanceBetweenRooms_Y))) Neighbours++;
-	if (AllRoomsData.Find(GridLoc + (-GetActorForwardVector() * DistanceBetweenRooms_X + -GetActorRightVector() * DistanceBetweenRooms_Y))) Neighbours++;
+	Neighbours += DoesFoundNeighbour(CenterRoomLoc + (GetActorForwardVector() * DistanceBetweenRooms_X + GetActorRightVector() * DistanceBetweenRooms_Y));
+	Neighbours += DoesFoundNeighbour(CenterRoomLoc + (GetActorForwardVector() * DistanceBetweenRooms_X + -GetActorRightVector() * DistanceBetweenRooms_Y));
+	Neighbours += DoesFoundNeighbour(CenterRoomLoc + (-GetActorForwardVector() * DistanceBetweenRooms_X + GetActorRightVector() * DistanceBetweenRooms_Y));
+	Neighbours += DoesFoundNeighbour(CenterRoomLoc + (-GetActorForwardVector() * DistanceBetweenRooms_X + -GetActorRightVector() * DistanceBetweenRooms_Y));
 
 	return Neighbours >= 3;
+}
+
+int32 AGenerateLevel::DoesFoundNeighbour(const FVector& DirToLookForNeighbour, int32 CenterRoomDoorSide, 
+	FRoomStruct* CenterRoom, bool bAddDoors, bool bChangeTypeNeighboursDoor)
+{
+	FRoomStruct* FoundRoom = AllRoomsData.Find(DirToLookForNeighbour);
+	if (FoundRoom == nullptr) return 0;
+
+	if (bAddDoors) CenterRoom->DoorsType[CenterRoomDoorSide] = EDT_Room;
+	if (bChangeTypeNeighboursDoor)
+	{
+		FoundRoom->DoorsType[GetDoorOnOppositeSide(CenterRoomDoorSide)] = CenterRoom->DoorsType[CenterRoomDoorSide];
+	}
+
+	return 1;
+}
+
+int32 AGenerateLevel::GetDoorOnOppositeSide(int32 CenterRoomDoorIndex)
+{
+	if (CenterRoomDoorIndex == 0) return 1;
+	else if (CenterRoomDoorIndex == 1) return 0;
+	else if (CenterRoomDoorIndex == 2) return 3;
+	else return 2;
 }
 
 void AGenerateLevel::FinishRoomLayout()
@@ -189,28 +190,26 @@ void AGenerateLevel::FinishRoomLayout()
 
 void AGenerateLevel::SetEndRooms(FRoomStruct* FoundRoom)
 {
-	if (FoundRoom->AmountOfDoors == 1 && FoundRoom->RoomType != ERT_Spawn)
+	if (FoundRoom->AmountOfDoors != 1 || FoundRoom->RoomType == ERT_Spawn) return;
+
+	FVector BossRoomLocation = FindFurthestRoom();
+
+	if (FoundRoom->Location == BossRoomLocation)
 	{
-		FVector BossRoomLocation = FindFurthestRoom();
-
-		if (FoundRoom->Location == BossRoomLocation)
-		{
-			FoundRoom->RoomType = ERT_Boss;
-			for (int i = 0; i != 4; i++) if (FoundRoom->DoorsType[i] != EDT_None) FoundRoom->DoorsType[i] = EDT_Boss;
-			CheckNeighbours(FoundRoom->Location, false, FoundRoom, true);
-		}
-		else
-		{
-			FoundRoom->RoomType = ERT_EndRoom;
-			EndRoomsLocations.Add(FoundRoom->Location);
-		}
-
-		if (bDrawDebugRoomLayout == true)
-		{
-			FColor NewColor = FoundRoom->RoomType == ERT_Boss ? FColor::Red : FColor::Emerald;
-			DrawDebugBox(GetWorld(), FoundRoom->Location + FVector(0, 0, 1.f), FVector(200.f, 200.f, 0.f), NewColor, true);
-		}
+		FoundRoom->RoomType = ERT_Boss;
+		for (int i = 0; i != 4; i++) if (FoundRoom->DoorsType[i] != EDT_None) FoundRoom->DoorsType[i] = EDT_Boss;
+		CheckNeighbours(FoundRoom->Location, false, FoundRoom, true);
 	}
+	else
+	{
+		FoundRoom->RoomType = ERT_EndRoom;
+		EndRoomsLocations.Add(FoundRoom->Location);
+	}
+
+	if (bDrawDebugRoomLayout == false) return;
+
+	FColor NewColor = FoundRoom->RoomType == ERT_Boss ? FColor::Red : FColor::Emerald;
+	DrawDebugBox(GetWorld(), FoundRoom->Location + FVector(0, 0, 1.f), FVector(200.f, 200.f, 0.f), NewColor, true);
 }
 #pragma endregion
 
@@ -248,7 +247,10 @@ void AGenerateLevel::SpawnSpecificRoom(ERoomType RoomTypeToChoose, EDoorType Doo
 
 	SpecificRoom->RoomType = RoomTypeToChoose;
 	EndRoomsLocations.Remove(SpecificRoom->Location);
-	for (int i = 0; i != 4; i++) if (SpecificRoom->DoorsType[i] == EDT_Room)SpecificRoom->DoorsType[i] = DoorTypeToChoose;
+	for (int i = 0; i != 4; i++)
+	{
+		if (SpecificRoom->DoorsType[i] == EDT_Room) SpecificRoom->DoorsType[i] = DoorTypeToChoose;
+	}
 	CheckNeighbours(SpecificRoom->Location, false, SpecificRoom, true);
 
 	if (bDrawDebugRoomLayout == true) DrawDebugBox(GetWorld(), SpecificRoom->Location + FVector(0, 0, 2.f), FVector(200.f, 200.f, 0.f), DebugColor, true);
