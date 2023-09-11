@@ -31,7 +31,7 @@ public:
 		bool bShouldDrawDebugBullets = false;
 
 	UFUNCTION(BlueprintCallable)
-		void DirectionForBullets(FRotator MeshRelativeRotation);
+		void CalculateAndSpawnBullets(FRotator MeshRelativeRotation);
 
 	UFUNCTION(BlueprintCallable)
 		FBulletStruct& GetBulletData() { return Bullet; }
@@ -39,28 +39,35 @@ public:
 	UFUNCTION(BlueprintCallable)
 		int32 GetHoldBulletDivideCounter() const { return HoldBulletDivideCounter; }
 
+	// Bullets
 	void Shoot(FRotator MeshRelativeRotation);
-	bool HoldBullet();
+	bool WasHoldBulletActivated();
+	void SpawnImmediatelyBombBullet();
+
+	// Hold bullet
 	bool ShouldSkipHoldBullet();
 	void SetShouldSkipHoldBullet(bool bShould) { bShouldSkipHoldBullet = bShould; }
 
+	// Laser
+	void TurnOffLaser();
+
+	// setters
 	void SetPlayerVariables(UMaterialInstanceDynamic* DynamicMat);
 	void SetEnemyOwner(class ABaseEnemy* NewOwner) { EnemyOwner = NewOwner; }
-	void RestartLaser();
-
-	void SpawnImmediatelyBombBullet();
-
 private:
 	UPROPERTY(EditAnywhere, Category = "Bullet Settings")
 		FBulletStruct Bullet;
 
-	void SpawnBullet(FVector StartLocation, FVector DirForBullet, FRotator BulletRotation);
+	void SpawnBullet(FVector StartLocation, FVector DirForBullet);
+
+	FRotator PawnRotation;
 
 	// Laser
-	bool bShootLaser;
+	bool bIsLaserActive;
 	float LaserTimeElapsed;
-	FRotator PawnRotation;
-	void LaserBullet(FVector StartLocation, FVector DirForLaser);
+	void LaserDamageRaycast(FVector StartLocation, FVector DirForLaser);
+	void ShootBulletAsLaser(const FVector & BulletSpawnLocation, const FVector & BulletShootDirection);
+	void TurnOffLaserAfterTime(float Delta);
 	class UNiagaraComponent* SpawnedLaserParticle;
 
 	// Hold Bullet
@@ -69,15 +76,15 @@ private:
 	int32 HoldBulletDivideCounter = 1;
 	bool bShouldSkipHoldBullet = false;
 	void HoldBulletSetDamage();
-	void ClearHoldBullet();
+	void TurnOffHoldBullet();
 
 	// Enemy
 	class ABaseEnemy* EnemyOwner;
 
 	// Frequency Bullet
-	bool bCanSpawnAnotherBullet = true;
+	bool bCanShoot = true;
 	FTimerHandle SpawnAnotherBulletHandle;
-	void SetCanSpawnAnotherBullet() { bCanSpawnAnotherBullet = true; }
+	void SetCanSpawnAnotherBullet() { bCanShoot = true; }
 
 	class ATrianglePawn* TrianglePawnPlayer;
 	UMaterialInstanceDynamic* BaseTriangleDynamicMat;

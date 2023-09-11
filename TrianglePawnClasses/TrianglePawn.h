@@ -139,6 +139,7 @@ private:
 
 	// Shoot 
 	bool CanShoot(float Axis);
+	void Shoot(float Axis);
 	void Shoot_Right(float Axis);
 	void Shoot_Forward(float Axis);
 

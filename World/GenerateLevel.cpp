@@ -118,10 +118,10 @@ bool AGenerateLevel::CheckNeighbours(const FVector& CenterRoomLoc, bool bAddDoor
 {
 	int32 Neighbours = 0;
 
-	Neighbours += DoesFoundNeighbour(CenterRoomLoc + GetActorForwardVector() * DistanceBetweenRooms_X, 0, CenterRoom, bAddDoors, bChangeTypeNeighboursDoor);
-	Neighbours += DoesFoundNeighbour(CenterRoomLoc + -GetActorForwardVector() * DistanceBetweenRooms_X, 1, CenterRoom, bAddDoors, bChangeTypeNeighboursDoor);
-	Neighbours += DoesFoundNeighbour(CenterRoomLoc + GetActorRightVector() * DistanceBetweenRooms_Y,  2, CenterRoom, bAddDoors, bChangeTypeNeighboursDoor);
-	Neighbours += DoesFoundNeighbour(CenterRoomLoc + -GetActorRightVector() * DistanceBetweenRooms_Y, 3, CenterRoom, bAddDoors, bChangeTypeNeighboursDoor);
+	Neighbours += WasNeighbourRoomFound(CenterRoomLoc + GetActorForwardVector() * DistanceBetweenRooms_X, 0, CenterRoom, bAddDoors, bChangeTypeNeighboursDoor);
+	Neighbours += WasNeighbourRoomFound(CenterRoomLoc + -GetActorForwardVector() * DistanceBetweenRooms_X, 1, CenterRoom, bAddDoors, bChangeTypeNeighboursDoor);
+	Neighbours += WasNeighbourRoomFound(CenterRoomLoc + GetActorRightVector() * DistanceBetweenRooms_Y,  2, CenterRoom, bAddDoors, bChangeTypeNeighboursDoor);
+	Neighbours += WasNeighbourRoomFound(CenterRoomLoc + -GetActorRightVector() * DistanceBetweenRooms_Y, 3, CenterRoom, bAddDoors, bChangeTypeNeighboursDoor);
 
 	if (bChangeTypeNeighboursDoor) return true;
 
@@ -132,15 +132,15 @@ bool AGenerateLevel::CheckNeighbours(const FVector& CenterRoomLoc, bool bAddDoor
 	}
 
 	// Corners
-	Neighbours += DoesFoundNeighbour(CenterRoomLoc + (GetActorForwardVector() * DistanceBetweenRooms_X + GetActorRightVector() * DistanceBetweenRooms_Y));
-	Neighbours += DoesFoundNeighbour(CenterRoomLoc + (GetActorForwardVector() * DistanceBetweenRooms_X + -GetActorRightVector() * DistanceBetweenRooms_Y));
-	Neighbours += DoesFoundNeighbour(CenterRoomLoc + (-GetActorForwardVector() * DistanceBetweenRooms_X + GetActorRightVector() * DistanceBetweenRooms_Y));
-	Neighbours += DoesFoundNeighbour(CenterRoomLoc + (-GetActorForwardVector() * DistanceBetweenRooms_X + -GetActorRightVector() * DistanceBetweenRooms_Y));
+	Neighbours += WasNeighbourRoomFound(CenterRoomLoc + (GetActorForwardVector() * DistanceBetweenRooms_X + GetActorRightVector() * DistanceBetweenRooms_Y));
+	Neighbours += WasNeighbourRoomFound(CenterRoomLoc + (GetActorForwardVector() * DistanceBetweenRooms_X + -GetActorRightVector() * DistanceBetweenRooms_Y));
+	Neighbours += WasNeighbourRoomFound(CenterRoomLoc + (-GetActorForwardVector() * DistanceBetweenRooms_X + GetActorRightVector() * DistanceBetweenRooms_Y));
+	Neighbours += WasNeighbourRoomFound(CenterRoomLoc + (-GetActorForwardVector() * DistanceBetweenRooms_X + -GetActorRightVector() * DistanceBetweenRooms_Y));
 
 	return Neighbours >= 3;
 }
 
-int32 AGenerateLevel::DoesFoundNeighbour(const FVector& DirToLookForNeighbour, int32 CenterRoomDoorSide, 
+int32 AGenerateLevel::WasNeighbourRoomFound(const FVector& DirToLookForNeighbour, int32 CenterRoomDoorSide, 
 	FRoomStruct* CenterRoom, bool bAddDoors, bool bChangeTypeNeighboursDoor)
 {
 	FRoomStruct* FoundRoom = AllRoomsData.Find(DirToLookForNeighbour);

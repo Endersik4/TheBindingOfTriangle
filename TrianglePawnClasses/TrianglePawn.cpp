@@ -109,12 +109,7 @@ void ATrianglePawn::Shoot_Right(float Axis)
 	if (Axis > 0.5f)  TriangleMeshComp->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 	else if (Axis < -0.5f)  TriangleMeshComp->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
 
-	if (CanShoot(Axis) == false) return;
-	BulletComponent->RestartLaser();
-
-	if (BulletComponent->HoldBullet() == false) return;
-
-	BulletComponent->Shoot(TriangleMeshComp->GetRelativeRotation());
+	Shoot(Axis);
 }
 
 void ATrianglePawn::Shoot_Forward(float Axis)
@@ -122,10 +117,16 @@ void ATrianglePawn::Shoot_Forward(float Axis)
 	if (Axis > 0.5f) TriangleMeshComp->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
 	else if (Axis < -0.5f) TriangleMeshComp->SetRelativeRotation(FRotator(0.f, -180.f, 0.f));
 	
-	if (CanShoot(Axis) == false) return;
-	BulletComponent->RestartLaser();
+	Shoot(Axis);
+}
 
-	if (BulletComponent->HoldBullet() == false) return;
+void ATrianglePawn::Shoot(float Axis)
+{
+	if (CanShoot(Axis) == false) return;
+
+	BulletComponent->TurnOffLaser(); // when player wants to turn around while laser is active then turn it off
+
+	if (BulletComponent->WasHoldBulletActivated() == true) return;
 
 	BulletComponent->Shoot(TriangleMeshComp->GetRelativeRotation());
 }

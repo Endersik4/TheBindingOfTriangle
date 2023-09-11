@@ -23,67 +23,53 @@ UBulletComponent::UBulletComponent()
 	// ...
 }
 
-
 // Called when the game starts
 void UBulletComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
 	DamageBeforeHoldBullet = Bullet.Damage;
-
 }
-
 
 // Called every frame
 void UBulletComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (bShootLaser == true)
-	{
-		DirectionForBullets(PawnRotation);
-		LaserTimeElapsed += DeltaTime;
-		if (LaserTimeElapsed > Bullet.LaserTime)
-		{
-			RestartLaser();
-		}
-	}
+	TurnOffLaserAfterTime(DeltaTime);
 }
 
+#pragma region /////////////// SHOOT /////////////////////
 void UBulletComponent::Shoot(FRotator MeshRelativeRotation)
 {
-	if (bCanSpawnAnotherBullet == false) return;
+	if (bCanShoot == false) return;
 
-	if (bShootLaser == true)
+	bool bShouldTurnOffHoldBullet = Bullet.bShootHoldBulletAfterTime == true && HoldBulletDivideCounter < 8 && GetWorld()->GetTimerManager().IsTimerActive(HoldBulletHandle) == true;
+	if (bShouldTurnOffHoldBullet)
 	{
-		RestartLaser();
-	}
-
-	if (Bullet.bShootHoldBulletAfterTime == true && HoldBulletDivideCounter < 8 && GetWorld()->GetTimerManager().IsTimerActive(HoldBulletHandle) == true)
-	{
-		ClearHoldBullet();
+		TurnOffHoldBullet();
 		return;
 	}
 	
-	DirectionForBullets(MeshRelativeRotation);
-	ClearHoldBullet();
+	CalculateAndSpawnBullets(MeshRelativeRotation);
+	TurnOffHoldBullet();
 
 	// Wait FrequencyTime to fire another bullet
-	if (bCanSpawnAnotherBullet == true)
-	{
-		bCanSpawnAnotherBullet = false;
-		GetWorld()->GetTimerManager().SetTimer(SpawnAnotherBulletHandle, this, &UBulletComponent::SetCanSpawnAnotherBullet, Bullet.FrequencyTime, false);
-	}
+	bCanShoot = false;
+	GetWorld()->GetTimerManager().SetTimer(SpawnAnotherBulletHandle, this, &UBulletComponent::SetCanSpawnAnotherBullet, Bullet.FrequencyTime, false);
 }
+#pragma endregion
 
-void UBulletComponent::DirectionForBullets(FRotator MeshRelativeRotation)
+#pragma region ////////////// SPAWN BULLET ////////////
+void UBulletComponent::CalculateAndSpawnBullets(FRotator MeshRelativeRotation)
 {
 	if (bShouldDrawDebugBullets == true) UKismetSystemLibrary::DrawDebugCircle(GetWorld(), GetOwner()->GetActorLocation(), Bullet.CirceRadius, 34, FLinearColor::White, 999.f, 1.f, FVector(0.f, 1.f, 0.f), FVector(1.0f, 0.f, 0.f));
+	PawnRotation = MeshRelativeRotation;
 
 	for (int i = 0; i != Bullet.Amount; i++)
 	{
 		// Calculate Start Location and bullet Direction
-		float angReg = FMath::DegreesToRadians(Bullet.DegreeBetween * i + Bullet.CirceAngle + MeshRelativeRotation.Yaw);
+		float angReg = FMath::DegreesToRadians(Bullet.DegreeBetween * i + Bullet.CirceAngle + PawnRotation.Yaw);
 		FVector BulletLocation = FVector(FMath::Cos(angReg) * Bullet.CirceRadius, FMath::Sin(angReg) * Bullet.CirceRadius, 0) + GetOwner()->GetActorLocation();
 		FVector BulletTrajectory = FVector(FMath::Cos(angReg), FMath::Sin(angReg), 0);
 
@@ -95,26 +81,15 @@ void UBulletComponent::DirectionForBullets(FRotator MeshRelativeRotation)
 
 		if (Bullet.TypeOfBullet == ETB_Laser)
 		{
-			PawnRotation = MeshRelativeRotation;
-			LaserBullet(BulletLocation, BulletTrajectory);
-			if (bShootLaser == false)
-			{
-				if (EnemyOwner) EnemyOwner->StopEnemyMovement(Bullet.LaserTime);
-				if (Bullet.LaserNiagaraParticle)
-				{
-					SpawnedLaserParticle = UNiagaraFunctionLibrary::SpawnSystemAttached(Bullet.LaserNiagaraParticle, GetOwner()->GetRootComponent(), FName(""), FVector(100.f,0.f,0.f), FRotator(-90.f, MeshRelativeRotation.Yaw, 0.f), EAttachLocation::KeepRelativeOffset, true);
-					SpawnedLaserParticle->SetWorldRotation(FRotator(-90.f, MeshRelativeRotation.Yaw, 0.f));
-				}
-				bShootLaser = true;
-			}
+			ShootBulletAsLaser(BulletLocation, BulletTrajectory);
 		}	
-		else SpawnBullet(BulletLocation, BulletTrajectory, MeshRelativeRotation);
+		else SpawnBullet(BulletLocation, BulletTrajectory);
 	}
 }
 
-void UBulletComponent::SpawnBullet(FVector StartLocation, FVector DirForBullet, FRotator BulletRotation)
+void UBulletComponent::SpawnBullet(FVector StartLocation, FVector DirForBullet)
 {
-	ABullet* BulletActor = GetWorld()->SpawnActor<ABullet>(Bullet.BulletClass, StartLocation, BulletRotation - FRotator(0.f,90.f,0.f));
+	ABullet* BulletActor = GetWorld()->SpawnActor<ABullet>(Bullet.BulletClass, StartLocation, PawnRotation - FRotator(0.f,90.f,0.f));
 	if (BulletActor == nullptr) return;
 
 	BulletActor->SetTrajectoryBullet(DirForBullet);
@@ -127,16 +102,19 @@ void UBulletComponent::SpawnImmediatelyBombBullet()
 {
 	ABullet* BulletActor = GetWorld()->SpawnActor<ABullet>(Bullet.BulletClass, GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation());
 	if (BulletActor == nullptr) return;
+
 	BulletActor->SetBulletData(Bullet);
 	BulletActor->CallExplodeBulletBomb();
 }
+#pragma endregion
 
-void UBulletComponent::LaserBullet(FVector StartLocation, FVector DirForLaser)
+#pragma region ////////////// BULLET AS LASER //////////////
+void UBulletComponent::LaserDamageRaycast(FVector StartLocation, FVector DirForLaser)
 {
 	TArray<AActor*> ActorsToIgnore;
 	TArray<FHitResult> Hits;
 	if (UKismetSystemLibrary::LineTraceMulti(GetWorld(), StartLocation, StartLocation + DirForLaser * Bullet.Distance, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel1),
-		false, ActorsToIgnore, EDrawDebugTrace::None, Hits, true) == false) return;	
+		false, ActorsToIgnore, EDrawDebugTrace::None, Hits, true) == false) return;
 
 	for (FHitResult& Hit : Hits)
 	{
@@ -144,17 +122,46 @@ void UBulletComponent::LaserBullet(FVector StartLocation, FVector DirForLaser)
 		if (DamageInterface == nullptr)  continue;
 
 		DamageInterface->TakeDamage(Bullet.Damage, Bullet.Impulse, DirForLaser);
-	} 
+	}
 }
 
-void UBulletComponent::RestartLaser()
+void UBulletComponent::ShootBulletAsLaser(const FVector& BulletSpawnLocation, const FVector& BulletShootDirection)
+{
+	LaserDamageRaycast(BulletSpawnLocation, BulletShootDirection);
+	if (bIsLaserActive == true) return;
+
+	if (EnemyOwner) EnemyOwner->StopEnemyMovement(Bullet.LaserTime);
+	if (Bullet.LaserNiagaraParticle)
+	{
+		SpawnedLaserParticle = UNiagaraFunctionLibrary::SpawnSystemAttached(Bullet.LaserNiagaraParticle, GetOwner()->GetRootComponent(), FName(""), FVector(0.f, 0.f, 0.f), FRotator(-90.f, PawnRotation.Yaw, 0.f), EAttachLocation::KeepRelativeOffset, true);
+		SpawnedLaserParticle->SetWorldRotation(FRotator(-90.f, PawnRotation.Yaw, 0.f)); // There is an error whereby particles do not rotate after calling SpawnSystemAttached.
+	}
+	bIsLaserActive = true;
+}
+
+void UBulletComponent::TurnOffLaserAfterTime(float Delta)
+{
+	if (bIsLaserActive == false) return;
+
+	CalculateAndSpawnBullets(PawnRotation);
+
+	LaserTimeElapsed += Delta;
+	if (LaserTimeElapsed > Bullet.LaserTime)
+	{
+		TurnOffLaser();
+	}
+}
+
+void UBulletComponent::TurnOffLaser()
 {
 	LaserTimeElapsed = 0.f;
-	bShootLaser = false;
+	bIsLaserActive = false;
 	if (SpawnedLaserParticle) SpawnedLaserParticle->DestroyComponent();
 }
+#pragma endregion
 
-bool UBulletComponent::HoldBullet()
+#pragma region /////////// HOLD BULLET /////////////
+bool UBulletComponent::WasHoldBulletActivated()
 {
 	if (Bullet.bHoldBullet == true && bShouldSkipHoldBullet == false)
 	{
@@ -162,10 +169,10 @@ bool UBulletComponent::HoldBullet()
 		{
 			GetWorld()->GetTimerManager().SetTimer(HoldBulletHandle, this, &UBulletComponent::HoldBulletSetDamage, Bullet.HoldBulletTime * 1 / 10.f, true);
 		}
-		return false;
+		return true;
 	}
 	bShouldSkipHoldBullet = false;
-	return true;
+	return false;
 }
 
 bool UBulletComponent::ShouldSkipHoldBullet()
@@ -173,17 +180,9 @@ bool UBulletComponent::ShouldSkipHoldBullet()
 	return Bullet.bHoldBullet == true && GetWorld()->GetTimerManager().IsTimerActive(HoldBulletHandle);
 }
 
-void UBulletComponent::SetPlayerVariables(UMaterialInstanceDynamic* DynamicMat)
-{
-	TrianglePawnPlayer = Cast<ATrianglePawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
-	if (TrianglePawnPlayer == nullptr) return;
-	BaseTriangleDynamicMat = DynamicMat;
-}
-
 void UBulletComponent::HoldBulletSetDamage()
 {
 	if (HoldBulletDivideCounter > 10) return;
-	UE_LOG(LogTemp, Warning, TEXT("COUNTER %d"), HoldBulletDivideCounter);
 	Bullet.Damage += DamageBeforeHoldBullet * 1 / 10.f;
 
 	if (BaseTriangleDynamicMat)
@@ -195,7 +194,7 @@ void UBulletComponent::HoldBulletSetDamage()
 	HoldBulletDivideCounter++;
 }
 
-void UBulletComponent::ClearHoldBullet()
+void UBulletComponent::TurnOffHoldBullet()
 {
 	if (Bullet.bHoldBullet == false) return;
 
@@ -205,4 +204,12 @@ void UBulletComponent::ClearHoldBullet()
 
 	if (BaseTriangleDynamicMat) BaseTriangleDynamicMat->SetVectorParameterValue(FName("Color"), FLinearColor::Green);
 }
+#pragma endregion
 
+void UBulletComponent::SetPlayerVariables(UMaterialInstanceDynamic* DynamicMat)
+{
+	TrianglePawnPlayer = Cast<ATrianglePawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (TrianglePawnPlayer == nullptr) return;
+
+	BaseTriangleDynamicMat = DynamicMat;
+}

@@ -62,7 +62,7 @@ private:
 	bool CanRoomBeAtGivenLoc(FVector& RoomLocation, int32& Index, int32& StartRoomDistance, int32& SpawnRoomCounter);
 
 	bool CheckNeighbours(const FVector& GridLoc, bool bAddDoors = false, FRoomStruct* GridRoom = nullptr, bool bChangeTypeNeighboursDoor = false);
-	int32 DoesFoundNeighbour(const FVector& DirToLookForNeighbour, int32 CenterRoomDoorIndex = 0, FRoomStruct* CenterRoom = nullptr, bool bAddDoors = false,  bool bChangeTypeNeighboursDoor = false);
+	int32 WasNeighbourRoomFound(const FVector& DirToLookForNeighbour, int32 CenterRoomDoorIndex = 0, FRoomStruct* CenterRoom = nullptr, bool bAddDoors = false,  bool bChangeTypeNeighboursDoor = false);
 	int32 GetDoorOnOppositeSide(int32 CenterRoomDoorIndex);
 
 	void FinishRoomLayout();
